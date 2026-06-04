@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawSentinel - AI Datacenter Security Dashboard</title>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <i data-lucide="shield-alert"></i>
+            </div>
+            <div class="brand-text">
+                <h1>ClawSentinel</h1>
+                <span>AI Datacenter Security</span>
+            </div>
+        </div>
+
+        <div class="nav-menu">
+            <div class="nav-group-title">Overview</div>
+            <a href="#" class="nav-item">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Executive Overview</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <i data-lucide="shield-check"></i>
+                <span>Risk Prioritization</span>
+                <span class="badge" id="sidebar-alert-badge">3</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="search"></i>
+                <span>Vulnerability Explorer</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="activity"></i>
+                <span>Threat Intelligence</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="award"></i>
+                <span>Compliance</span>
+            </a>
+
+            <div class="nav-group-title">Inventory</div>
+            <a href="#" class="nav-item">
+                <i data-lucide="database"></i>
+                <span>Data Centers</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="cpu"></i>
+                <span>Assets</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="server"></i>
+                <span>GPU Clusters</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="git-branch"></i>
+                <span>Network Topology</span>
+            </a>
+
+            <div class="nav-group-title">Analytics</div>
+            <a href="#" class="nav-item">
+                <i data-lucide="bar-chart-3"></i>
+                <span>Risk Analytics</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="eye"></i>
+                <span>Exposure Analysis</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="trending-up"></i>
+                <span>Trends & Reports</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="shield-alert"></i>
+                <span>MITRE ATT&CK</span>
+            </a>
+
+            <div class="nav-group-title">Response</div>
+            <a href="#" class="nav-item">
+                <i data-lucide="list-todo"></i>
+                <span>Response Queue</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="terminal"></i>
+                <span>Automations</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="play-circle"></i>
+                <span>Playbooks</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="file-up"></i>
+                <span>Patch Management</span>
+            </a>
+
+            <div class="nav-group-title">Configuration</div>
+            <a href="#" class="nav-item">
+                <i data-lucide="settings"></i>
+                <span>Policies</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="blocks"></i>
+                <span>Integrations</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="sliders"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+
+        <div class="system-health">
+            <div class="status-dot"></div>
+            <div class="health-info">
+                <h4>System Health</h4>
+                <p>All Systems Operational</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main>
+        <!-- Header -->
+        <header>
+            <div class="breadcrumb-area">
+                <div class="breadcrumbs">
+                    <a href="#">Data Centers</a>
+                    <span id="breadcrumb-current">Risk Prioritization</span>
+                </div>
+                <h2>Risk Prioritization & Response</h2>
+            </div>
+
+            <div class="header-actions">
+                <button class="burger-menu-btn" id="sidebar-toggle" title="Toggle Sidebar">
+                    <i data-lucide="menu"></i>
+                </button>
+
+                <select class="header-dropdown" id="datacenter-select" title="Select Data Center">
+                    <option value="all">All Data Centers</option>
+                    <option value="dc-east">DC-East</option>
+                    <option value="dc-west">DC-West</option>
+                </select>
+
+                <select class="header-dropdown" id="timeframe-select" title="Select Time Frame">
+                    <option value="30d">Last 30 Days</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="24h">Last 24 Hours</option>
+                </select>
+
+                <button class="theme-toggle-btn" id="theme-toggle" title="Toggle Light/Dark Mode">
+                    <i data-lucide="moon"></i>
+                </button>
+
+                <button class="notification-btn" title="View Notifications">
+                    <i data-lucide="bell"></i>
+                    <span class="notification-badge">8</span>
+                </button>
+
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <h4>Admin</h4>
+                        <span>Security Team</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sub-Header Alert Count Controller -->
+        <div class="sub-header-bar" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px; font-size: 13px; font-weight: 500;">
+            <div class="count-controller" style="display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: var(--border-radius-sm); box-shadow: var(--shadow-sm); transition: border-color var(--transition-fast);">
+                <span style="color: var(--text-secondary);">Risk Prioritization Count:</span>
+                <span id="header-alert-count" style="font-weight: 700; color: var(--color-critical); min-width: 12px; text-align: center; font-size: 14px; transition: transform 0.2s ease;">3</span>
+                <div style="display: flex; flex-direction: column; line-height: 0.5; margin-left: 4px;">
+                    <button id="count-increment" class="count-btn" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; padding: 1px;" title="Increase Count"><i data-lucide="chevron-up" style="width: 12px; height: 12px;"></i></button>
+                    <button id="count-decrement" class="count-btn" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; padding: 1px;" title="Decrease Count"><i data-lucide="chevron-down" style="width: 12px; height: 12px;"></i></button>
+                </div>
+                <button id="count-reset" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; padding: 2px; margin-left: 6px;" title="Reset count"><i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i></button>
+            </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <section class="kpi-grid">
+            <!-- Critical CVEs -->
+            <div class="card critical">
+                <div class="kpi-header">
+                    <span>Critical CVEs</span>
+                    <div class="kpi-icon">
+                        <i data-lucide="shield-alert"></i>
+                    </div>
+                </div>
+                <div class="kpi-body">
+                    <span class="kpi-value" id="kpi-critical-cves">15</span>
+                </div>
+                <p class="kpi-subtitle">Unmitigated risks</p>
+                <div class="kpi-trend up">
+                    <i data-lucide="trending-up"></i>
+                    <span>+ 25% vs last 30d</span>
+                </div>
+            </div>
+
+            <!-- High Risk Nodes -->
+            <div class="card high">
+                <div class="kpi-header">
+                    <span>High Risk Nodes</span>
+                    <div class="kpi-icon">
+                        <i data-lucide="server"></i>
+                    </div>
+                </div>
+                <div class="kpi-body">
+                    <span class="kpi-value" id="kpi-high-nodes">24</span>
+                </div>
+                <p class="kpi-subtitle">Exposed server elements</p>
+                <div class="kpi-trend up">
+                    <i data-lucide="trending-up"></i>
+                    <span>+ 18% vs last 30d</span>
+                </div>
+            </div>
+
+            <!-- Average Risk Score -->
+            <div class="card medium">
+                <div class="kpi-header">
+                    <span>Average Risk Score</span>
+                    <div class="kpi-sparkline">
+                        <canvas id="avg-risk-sparkline"></canvas>
+                    </div>
+                </div>
+                <div class="kpi-body">
+                    <span class="kpi-value" id="kpi-avg-score">6.4</span>
+                </div>
+                <p class="kpi-subtitle">Across all assets</p>
+                <div class="kpi-trend neutral">
+                    <i data-lucide="trending-up"></i>
+                    <span>+ 0.2 vs last 30d</span>
+                </div>
+            </div>
+
+            <!-- Open Responses -->
+            <div class="card primary">
+                <div class="kpi-header">
+                    <span>Open Responses</span>
+                    <div class="kpi-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                        <i data-lucide="clipboard-list"></i>
+                    </div>
+                </div>
+                <div class="kpi-body">
+                    <span class="kpi-value" id="kpi-open-responses">8</span>
+                </div>
+                <p class="kpi-subtitle">Require action</p>
+                <div class="kpi-trend down">
+                    <i data-lucide="trending-down"></i>
+                    <span>- 12% vs last 30d</span>
+                </div>
+            </div>
+
+            <!-- Patch Compliance -->
+            <div class="card low">
+                <div class="kpi-header">
+                    <span>Patch Compliance</span>
+                    <div class="progress-circle-wrapper">
+                        <svg class="progress-circle-svg" viewBox="0 0 48 48">
+                            <circle class="progress-circle-bg" cx="24" cy="24" r="20" />
+                            <circle class="progress-circle-bar" id="compliance-circle-bar" cx="24" cy="24" r="20" />
+                        </svg>
+                        <div class="progress-circle-text" id="kpi-compliance-val">82%</div>
+                    </div>
+                </div>
+                <div class="kpi-body">
+                    <span class="kpi-value" id="kpi-compliance-subtitle">82%</span>
+                </div>
+                <p class="kpi-subtitle">Below target (90%)</p>
+                <div class="kpi-trend down">
+                    <i data-lucide="trending-up"></i>
+                    <span>+ 5% vs last 30d</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Mid Section -->
+        <section class="mid-grid">
+            <!-- Doughnut Chart: Risk Score Distribution -->
+            <div class="card chart-card">
+                <div class="chart-card-header">
+                    <h3>Risk Score Distribution</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="risk-distribution-chart"></canvas>
+                    <div class="doughnut-info-overlay">
+                        <span class="doughnut-total" id="doughnut-center-total">200</span>
+                        <span class="doughnut-label">Total Assets</span>
+                    </div>
+                </div>
+                <div class="doughnut-legend-container" id="chart-legend">
+                    <!-- Loaded dynamically via JavaScript for precise synchronization -->
+                </div>
+                <a href="#" class="chart-footer-link">
+                    <span>View Risk Analytics</span>
+                    <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+
+            <!-- Line Chart: Risk Trend (Last 30 Days) -->
+            <div class="card chart-card">
+                <div class="chart-card-header">
+                    <h3>Risk Trend <span style="text-transform:none; color: var(--text-secondary); font-weight: normal;">(Last 30 Days)</span></h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="risk-trend-chart"></canvas>
+                </div>
+                <a href="#" class="chart-footer-link">
+                    <span>View Trends & Reports</span>
+                    <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+
+            <!-- Top CVEs By Risk Score -->
+            <div class="card chart-card">
+                <div class="chart-card-header">
+                    <h3>Top CVEs by Risk Score</h3>
+                </div>
+                <div class="top-cves-list" id="top-cves-list">
+                    <!-- Populated dynamically via JS -->
+                </div>
+                <a href="#" class="chart-footer-link" style="margin-top: auto;">
+                    <span>View Vulnerability Explorer</span>
+                    <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- Bottom Table: Top Risky Assets -->
+        <section class="card assets-section">
+            <div class="chart-card-header" style="border-bottom: none; margin-bottom: 0;">
+                <h3>Top Risky Assets</h3>
+                <div class="assets-header-actions">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="asset-search" placeholder="Search asset, CVE, or IP...">
+                    </div>
+                    <select class="header-dropdown" id="severity-filter" title="Filter by Severity">
+                        <option value="all">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    <select class="header-dropdown" id="status-filter" title="Filter by Status">
+                        <option value="all">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                    <button class="notification-btn" title="Refresh Data" id="refresh-assets-btn">
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Asset Name</th>
+                            <th>Type</th>
+                            <th>Data Center</th>
+                            <th>Criticality</th>
+                            <th>Risk Score</th>
+                            <th>Top CVE</th>
+                            <th>Status</th>
+                            <th>Last Seen</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assets-table-body">
+                        <!-- Loaded dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <a href="#" class="chart-footer-link" style="margin-top: 16px;">
+                <span>View All in Response Queue</span>
+                <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+            </a>
+        </section>
+    </main>
+
+    <!-- Slide-Out Investigation Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="details-drawer" id="details-drawer">
+        <div class="drawer-header">
+            <h3>Asset Investigation</h3>
+            <button class="drawer-close" id="drawer-close" title="Close details">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="drawer-content" id="drawer-content">
+            <!-- Rendered dynamically on clicking Investigate -->
+        </div>
+    </div>
+
+    <!-- Report Generator Modal -->
+    <div class="modal-overlay" id="report-modal-overlay"></div>
+    <div class="report-modal" id="report-modal">
+        <div class="modal-header">
+            <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="file-text" style="width:18px;height:18px;color:var(--primary);"></i>Security Report Generator</h3>
+            <button class="modal-close" id="report-modal-close" title="Close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body" id="report-modal-body">
+            <!-- Configuration view -->
+            <div id="report-config-view">
+                <div class="form-group">
+                    <label for="report-type">Report Template</label>
+                    <select id="report-type" class="header-dropdown" style="width: 100%; margin-top: 6px;">
+                        <option value="executive">Executive Security Overview</option>
+                        <option value="vulnerability">Detailed Vulnerability Exposure Report</option>
+                        <option value="compliance">Data Center Asset Compliance Audit</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="report-scope">Data Scope</label>
+                    <select id="report-scope" class="header-dropdown" style="width: 100%; margin-top: 6px;">
+                        <option value="all">All Data Centers</option>
+                        <option value="dc-east">DC-East only</option>
+                        <option value="dc-west">DC-West only</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Include Sections</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px; font-size: 13px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" checked id="inc-kpi"> Key Risk Metrics (KPI Summary)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" checked id="inc-charts"> Charts and Distributions
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" checked id="inc-table"> Top Risky Asset Lists
+                        </label>
+                    </div>
+                </div>
+                <button class="drawer-action-btn" id="btn-generate-report" style="width:100%; margin-top: 24px;">
+                    Generate Security Report
+                </button>
+            </div>
+
+            <!-- Loading view -->
+            <div id="report-loading-view" style="display: none; text-align: center; padding: 40px 20px;">
+                <div class="spinner" style="margin: 0 auto 20px auto; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+                <h4 id="report-loading-status" style="font-size: 14px; font-weight: 600;">Assembling report datasets...</h4>
+                <p style="color: var(--text-secondary); font-size: 12px; margin-top: 8px;">Querying telemetry logs</p>
+            </div>
+
+            <!-- Preview view -->
+            <div id="report-preview-view" style="display: none;">
+                <div class="report-print-area" id="report-print-area" style="background: white; color: #1e293b; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; max-height: 380px; overflow-y: auto; font-family: system-ui, sans-serif; font-size: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                    <!-- Generated HTML injected here -->
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button class="btn-investigate" id="btn-report-back" style="flex: 1;">Back</button>
+                    <button class="drawer-action-btn" id="btn-report-print" style="flex: 2; margin-top: 0;">Print / Save as PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
