@@ -1376,3 +1376,59 @@ tbody tr:hover {
     }
 }
 
+/* API Status Indicator Styles */
+.api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.api-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-medium);
+    box-shadow: 0 0 6px var(--color-medium);
+    display: inline-block;
+}
+
+.api-status.connected {
+    color: var(--text-primary);
+}
+
+.api-status.connected .api-status-dot {
+    background-color: var(--color-low);
+    box-shadow: 0 0 6px var(--color-low);
+    animation: pulse-green 2s infinite;
+}
+
+.api-status.offline {
+    color: var(--text-secondary);
+}
+
+.api-status.offline .api-status-dot {
+    background-color: var(--color-high);
+    box-shadow: 0 0 6px var(--color-high);
+    animation: pulse-orange 2s infinite;
+}
+
+@keyframes pulse-orange {
+    0% {
+        box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(249, 115, 22, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+    }
+}

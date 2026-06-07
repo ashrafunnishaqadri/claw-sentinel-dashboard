@@ -6,9 +6,11 @@ let riskDistChart = null;
 let riskTrendChart = null;
 let avgSparkline = null;
 let prioritizationCount = 3; // Global alert counter
+let dashboardData = null; // Loaded from REST API
+const apiStatusIndicator = document.getElementById("api-status-indicator");
 
-// --- Mock Data ---
-const dashboardData = {
+// --- Fallback Mock Data ---
+const localFallbackData = {
     criticalCVEs: 15,
     highNodes: 24,
     avgRiskScore: 6.4,
@@ -148,8 +150,42 @@ const dashboardData = {
             gpuInfo: "1x NVIDIA L40S 48GB",
             details: "Low severity container dependency vulnerability. Patched dependency tree. Integrity verified."
         }
-    ]
+    ],
+    complianceRate: 82,
+    prioritizationCount: 3
 };
+
+// --- REST API Helper Functions ---
+
+// Fetch dashboard data from the dummy server
+async function fetchDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard');
+        if (!response.ok) throw new Error("REST API responded with error " + response.status);
+        dashboardData = await response.json();
+        prioritizationCount = dashboardData.prioritizationCount;
+        
+        // Update connection status in UI
+        if (apiStatusIndicator) {
+            apiStatusIndicator.className = "api-status connected";
+            const textEl = apiStatusIndicator.querySelector(".api-status-text");
+            if (textEl) textEl.textContent = "API Connected";
+        }
+        return true;
+    } catch (e) {
+        console.warn("REST API server offline. Falling back to local browser mock mode.", e);
+        dashboardData = JSON.parse(JSON.stringify(localFallbackData));
+        prioritizationCount = dashboardData.prioritizationCount;
+        
+        // Update connection status in UI
+        if (apiStatusIndicator) {
+            apiStatusIndicator.className = "api-status offline";
+            const textEl = apiStatusIndicator.querySelector(".api-status-text");
+            if (textEl) textEl.textContent = "API Offline (Mock)";
+        }
+        return false;
+    }
+}
 
 // --- DOM References ---
 const sidebar = document.getElementById("sidebar");
@@ -176,7 +212,7 @@ const countDecrementBtn = document.getElementById("count-decrement");
 const countResetBtn = document.getElementById("count-reset");
 
 // --- Initialization ---
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initialize Icons
     try {
         lucide.createIcons();
@@ -184,21 +220,19 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Lucide icons load error:", e);
     }
 
-    // 2. Set static KPI card text from mock data
+    // Load data from REST API or offline fallback
+    await fetchDashboardData();
+
+    // 2. Set static KPI card text from loaded data
     try {
-        document.getElementById("kpi-critical-cves").textContent = dashboardData.criticalCVEs;
-        document.getElementById("kpi-high-nodes").textContent = dashboardData.highNodes;
-        document.getElementById("kpi-avg-score").textContent = dashboardData.avgRiskScore;
-        document.getElementById("kpi-open-responses").textContent = dashboardData.openResponses;
-        document.getElementById("kpi-compliance-val").textContent = `${dashboardData.complianceRate}%`;
-        document.getElementById("kpi-compliance-subtitle").textContent = `${dashboardData.complianceRate}%`;
+        updateKPICards();
     } catch (e) {
         console.error("KPI cards populating error:", e);
     }
 
-    // Initialize Alert Count Sync
+    // Initialize Alert Count Sync UI
     try {
-        updateAlertCount(prioritizationCount);
+        updateAlertCountUI(prioritizationCount);
     } catch (e) {
         console.error("Prioritization alert count synchronization error:", e);
     }
@@ -246,10 +280,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Helper to populate KPI metrics on UI
+function updateKPICards() {
+    try {
+        document.getElementById("kpi-critical-cves").textContent = dashboardData.criticalCVEs;
+        document.getElementById("kpi-high-nodes").textContent = dashboardData.highNodes;
+        document.getElementById("kpi-avg-score").textContent = dashboardData.avgRiskScore;
+        document.getElementById("kpi-open-responses").textContent = dashboardData.openResponses;
+        document.getElementById("kpi-compliance-val").textContent = `${dashboardData.complianceRate}%`;
+        document.getElementById("kpi-compliance-subtitle").textContent = `${dashboardData.complianceRate}%`;
+    } catch (e) {
+        console.error("KPI cards populating error:", e);
+    }
+}
+
 // --- Helper Functions ---
 
-// Synchronize prioritization alert counts in sidebar & header
-function updateAlertCount(newCount) {
+// Synchronize prioritization alert counts in sidebar & header (UI updates only)
+function updateAlertCountUI(newCount) {
     prioritizationCount = Math.max(0, newCount); // Clamp to 0
     
     // Update Header Text
@@ -274,6 +322,29 @@ function updateAlertCount(newCount) {
             void sidebarAlertBadge.offsetWidth; // Reflow
             sidebarAlertBadge.classList.add("pop-animation");
         }
+    }
+}
+
+// Synchronize prioritization alert counts with REST API (or fallback)
+async function updateAlertCount(newCount) {
+    const clampedCount = Math.max(0, newCount);
+    
+    // Update UI immediately for responsiveness
+    updateAlertCountUI(clampedCount);
+    
+    try {
+        const response = await fetch('/api/prioritization-count', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ count: clampedCount })
+        });
+        if (response.ok) {
+            const data = await response.json();
+            // Sync with actual value confirmed by server
+            updateAlertCountUI(data.count);
+        }
+    } catch (e) {
+        console.warn("Failed to save prioritization count to server. Running offline.");
     }
 }
 
@@ -499,8 +570,44 @@ function closeDrawer() {
 }
 
 // Action Trigger Playbook Alert
-window.executeMitigationPlaybook = function(assetName, cve) {
-    alert(`[PLAYBOOK RUNNING] Initialized security containment and patching pipeline for ${assetName} resolving vulnerability ${cve}.`);
+window.executeMitigationPlaybook = async function(assetName, cve) {
+    try {
+        const response = await fetch('/api/mitigate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assetName, cve })
+        });
+        if (!response.ok) throw new Error("HTTP error: " + response.status);
+        
+        const data = await response.json();
+        alert(data.message);
+        
+        // Update local asset status and UI
+        const asset = dashboardData.assets.find(a => a.name === assetName);
+        if (asset) {
+            asset.status = "in-progress";
+        }
+        if (data.openResponses !== undefined) {
+            dashboardData.openResponses = data.openResponses;
+        }
+        updateKPICards();
+        renderAssetsTable();
+    } catch (error) {
+        console.warn("Failed to execute playbook on server. Running offline fallback.", error);
+        alert(`[PLAYBOOK RUNNING] Initialized security containment and patching pipeline for ${assetName} resolving vulnerability ${cve}.`);
+        
+        // Local fallback update
+        const asset = dashboardData.assets.find(a => a.name === assetName);
+        if (asset) {
+            asset.status = "in-progress";
+            // Recalculate local open count if not resolved
+            dashboardData.openResponses = dashboardData.assets.filter(
+                a => a.status === 'open' || a.status === 'in-progress'
+            ).length + 3;
+            updateKPICards();
+            renderAssetsTable();
+        }
+    }
     closeDrawer();
 };
 
@@ -513,11 +620,17 @@ function initCharts() {
     // 1. Doughnut Chart: Risk Score Distribution
     const distCtx = document.getElementById("risk-distribution-chart").getContext("2d");
     
+    // Dynamically calculate segment counts to sync with assets data
+    const criticalCount = dashboardData.assets.filter(a => a.criticality === "critical").length + 10;
+    const highCount = dashboardData.assets.filter(a => a.criticality === "high").length + 25;
+    const mediumCount = dashboardData.assets.filter(a => a.criticality === "medium").length + 75;
+    const lowCount = Math.max(0, 250 - (criticalCount + highCount + mediumCount));
+
     // Doughnut segments data (Critical, High, Medium, Low)
     const distData = {
         labels: ["Critical (9.0-10)", "High (7.0-8.9)", "Medium (4.0-6.9)", "Low (0-3.9)"],
         datasets: [{
-            data: [15, 35, 80, 120], // Matches 250 Total Assets
+            data: [criticalCount, highCount, mediumCount, lowCount], // Matches 250 Total Assets
             backgroundColor: [
                 '#ef4444', // Critical
                 '#f97316', // High
@@ -554,28 +667,7 @@ function initCharts() {
     });
 
     // Populate legend HTML dynamically
-    const legendContainer = document.getElementById("chart-legend");
-    legendContainer.innerHTML = "";
-    
-    const colors = distData.datasets[0].backgroundColor;
-    const counts = distData.datasets[0].data;
-    const total = counts.reduce((a,b)=>a+b, 0);
-    const labels = ["Critical", "High", "Medium", "Low"];
-    const ranges = ["(9.0 - 10)", "(7.0 - 8.9)", "(4.0 - 6.9)", "(0 - 3.9)"];
-
-    for (let i = 0; i < labels.length; i++) {
-        const pct = ((counts[i]/total)*100).toFixed(0);
-        const item = document.createElement("div");
-        item.className = "legend-item";
-        item.innerHTML = `
-            <div class="legend-left">
-                <div class="legend-color" style="background-color: ${colors[i]};"></div>
-                <span style="font-weight: 500;">${labels[i]} <span style="color: var(--text-secondary); font-size:10px;">${ranges[i]}</span></span>
-            </div>
-            <div class="legend-right">${counts[i]} (${pct}%)</div>
-        `;
-        legendContainer.appendChild(item);
-    }
+    renderDoughnutLegend(distData.datasets[0].data);
 
     // 2. Line Chart: Risk Trend (Last 30 Days)
     const trendCtx = document.getElementById("risk-trend-chart").getContext("2d");
@@ -621,6 +713,59 @@ function initCharts() {
             }
         }
     });
+}
+
+// Populate Doughnut legend and center overlay dynamically
+function renderDoughnutLegend(counts) {
+    const legendContainer = document.getElementById("chart-legend");
+    if (!legendContainer) return;
+    legendContainer.innerHTML = "";
+    
+    const colors = ['#ef4444', '#f97316', '#eab308', '#10b981'];
+    const total = counts.reduce((a, b) => a + b, 0);
+    const labels = ["Critical", "High", "Medium", "Low"];
+    const ranges = ["(9.0 - 10)", "(7.0 - 8.9)", "(4.0 - 6.9)", "(0 - 3.9)"];
+
+    for (let i = 0; i < labels.length; i++) {
+        const pct = total > 0 ? ((counts[i] / total) * 100).toFixed(0) : 0;
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        item.innerHTML = `
+            <div class="legend-left">
+                <div class="legend-color" style="background-color: ${colors[i]};"></div>
+                <span style="font-weight: 500;">${labels[i]} <span style="color: var(--text-secondary); font-size:10px;">${ranges[i]}</span></span>
+            </div>
+            <div class="legend-right">${counts[i]} (${pct}%)</div>
+        `;
+        legendContainer.appendChild(item);
+    }
+    
+    const centerTotal = document.getElementById("doughnut-center-total");
+    if (centerTotal) {
+        centerTotal.textContent = total;
+    }
+}
+
+// Update charts with fresh REST API data
+function updateCharts() {
+    if (riskTrendChart) {
+        riskTrendChart.data.datasets[0].data = dashboardData.trendData.values;
+        riskTrendChart.update();
+    }
+    if (avgSparkline) {
+        avgSparkline.data.datasets[0].data = dashboardData.sparklineData;
+        avgSparkline.update();
+    }
+    if (riskDistChart) {
+        const criticalCount = dashboardData.assets.filter(a => a.criticality === "critical").length + 10;
+        const highCount = dashboardData.assets.filter(a => a.criticality === "high").length + 25;
+        const mediumCount = dashboardData.assets.filter(a => a.criticality === "medium").length + 75;
+        const lowCount = Math.max(0, 250 - (criticalCount + highCount + mediumCount));
+        
+        riskDistChart.data.datasets[0].data = [criticalCount, highCount, mediumCount, lowCount];
+        riskDistChart.update();
+        renderDoughnutLegend(riskDistChart.data.datasets[0].data);
+    }
 }
 
 // Refresh layouts when theme changes
@@ -682,19 +827,52 @@ function setupEventListeners() {
     datacenterSelect.addEventListener("change", renderAssetsTable);
 
     // Refresh table button animation & action
-    refreshAssetsBtn.addEventListener("click", () => {
+    refreshAssetsBtn.addEventListener("click", async () => {
         refreshAssetsBtn.classList.add("spinning");
         
-        // Mocking refresh loader
-        setTimeout(() => {
-            // Randomly shift scores slightly to simulate changes
+        try {
+            const response = await fetch('/api/refresh', { method: 'POST' });
+            if (!response.ok) throw new Error("HTTP error: " + response.status);
+            
+            dashboardData = await response.json();
+            
+            // Update UI elements
+            updateKPICards();
+            renderAssetsTable();
+            updateCharts();
+        } catch (error) {
+            console.warn("Failed to refresh data from server. Running offline refresh simulation.", error);
+            // Offline fallback simulation
             dashboardData.assets.forEach(asset => {
                 const shift = (Math.random() - 0.5) * 0.4;
                 asset.score = Math.min(10, Math.max(1, +(asset.score + shift).toFixed(1)));
+                
+                // Update criticality
+                if (asset.score >= 9.0) asset.criticality = "critical";
+                else if (asset.score >= 7.0) asset.criticality = "high";
+                else if (asset.score >= 4.0) asset.criticality = "medium";
+                else asset.criticality = "low";
             });
+            
+            // Randomly shift average score
+            dashboardData.avgRiskScore = Math.min(10, Math.max(1, +(dashboardData.avgRiskScore + (Math.random() - 0.5) * 0.2).toFixed(1)));
+            
+            dashboardData.sparklineData.shift();
+            dashboardData.sparklineData.push(dashboardData.avgRiskScore);
+            
+            // Recalculate CVE counts
+            dashboardData.criticalCVEs = dashboardData.assets.filter(a => a.criticality === "critical").length + 13;
+            dashboardData.highNodes = dashboardData.assets.filter(a => a.criticality === "high").length + 20;
+            
+            updateKPICards();
             renderAssetsTable();
-            refreshAssetsBtn.classList.remove("spinning");
-        }, 600);
+            updateCharts();
+        } finally {
+            // Keep spinning animation visible briefly for realistic user feedback
+            setTimeout(() => {
+                refreshAssetsBtn.classList.remove("spinning");
+            }, 600);
+        }
     });
 
     // Close drawers
@@ -783,7 +961,7 @@ function closeReportModal() {
     document.getElementById("report-modal-overlay").classList.remove("open");
 }
 
-function generateReport() {
+async function generateReport() {
     const type = document.getElementById("report-type").value;
     const scope = document.getElementById("report-scope").value;
     const incKpi = document.getElementById("inc-kpi").checked;
@@ -810,12 +988,25 @@ function generateReport() {
             statusText.textContent = stage.text;
         }, stage.time);
     });
+
+    let reportHTML = "";
+    try {
+        const response = await fetch('/api/generate-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, scope, incKpi, incCharts, incTable })
+        });
+        if (!response.ok) throw new Error("HTTP error: " + response.status);
+        const data = await response.json();
+        reportHTML = data.html;
+    } catch (error) {
+        console.warn("Failed to generate report from API. Using local generator.", error);
+        reportHTML = buildReportHTML(type, scope, incKpi, incCharts, incTable);
+    }
     
     setTimeout(() => {
         loadingView.style.display = "none";
         previewView.style.display = "block";
-        
-        const reportHTML = buildReportHTML(type, scope, incKpi, incCharts, incTable);
         document.getElementById("report-print-area").innerHTML = reportHTML;
     }, 1600);
 }
