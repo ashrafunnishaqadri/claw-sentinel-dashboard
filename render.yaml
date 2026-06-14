@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: claw-sentinel-dashboard
+    runtime: python
+    buildCommand: ""
+    startCommand: python server.py
+    envVars:
+      - key: PORT
+        generateValue: false
+    healthCheckPath: /api/dashboard

@@ -1,0 +1,2 @@
+# ClawSentinel uses Python standard library only (no pip packages needed)
+# This file tells Render this is a Python web service

@@ -157,27 +157,80 @@ const localFallbackData = {
 
 // --- REST API Helper Functions ---
 
-// Fetch dashboard data from the dummy server
+// Helper: fetch a single GET endpoint and return parsed JSON (throws on error)
+async function getEndpoint(path) {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error(`GET ${path} failed with status ${response.status}`);
+    return response.json();
+}
+
+// Fetch dashboard data using 8 dedicated GET endpoints in parallel
 async function fetchDashboardData() {
     try {
-        const response = await fetch('/api/dashboard');
-        if (!response.ok) throw new Error("REST API responded with error " + response.status);
-        dashboardData = await response.json();
+        // Fire all 8 GET requests concurrently for maximum speed
+        const [
+            criticalCvesData,    // GET /api/critical-cves
+            highNodesData,       // GET /api/high-risk-nodes
+            avgRiskData,         // GET /api/avg-risk-score
+            openResponsesData,   // GET /api/open-responses
+            complianceData,      // GET /api/patch-compliance
+            distributionData,    // GET /api/risk-distribution
+            topCvesData,         // GET /api/top-cves
+            topAssetsData        // GET /api/top-risky-assets
+        ] = await Promise.all([
+            getEndpoint('/api/critical-cves'),
+            getEndpoint('/api/high-risk-nodes'),
+            getEndpoint('/api/avg-risk-score'),
+            getEndpoint('/api/open-responses'),
+            getEndpoint('/api/patch-compliance'),
+            getEndpoint('/api/risk-distribution'),
+            getEndpoint('/api/top-cves'),
+            getEndpoint('/api/top-risky-assets')
+        ]);
+
+        // Assemble all responses into a single dashboardData object so all
+        // existing render functions (updateKPICards, initCharts, etc.) work
+        // unchanged — only the fetch layer is now granular.
+        dashboardData = {
+            // KPI cards
+            criticalCVEs:        criticalCvesData.criticalCVEs,
+            highNodes:           highNodesData.highNodes,
+            avgRiskScore:        avgRiskData.avgRiskScore,
+            sparklineData:       avgRiskData.sparklineData,
+            openResponses:       openResponsesData.openResponses,
+            complianceRate:      complianceData.complianceRate,
+            trendData:           complianceData.trendData,
+
+            // Risk distribution chart (pre-computed server-side)
+            riskDistribution:    distributionData.distribution,
+            totalAssets:         distributionData.totalAssets,
+
+            // CVE panel
+            topCVEs:             topCvesData.topCVEs,
+
+            // Risky assets table (server returns sorted by score desc)
+            assets:              topAssetsData.assets,
+
+            // Misc state
+            prioritizationCount: 3
+        };
+
         prioritizationCount = dashboardData.prioritizationCount;
-        
-        // Update connection status in UI
+
+        // Update connection status indicator → Connected
         if (apiStatusIndicator) {
             apiStatusIndicator.className = "api-status connected";
             const textEl = apiStatusIndicator.querySelector(".api-status-text");
             if (textEl) textEl.textContent = "API Connected";
         }
         return true;
+
     } catch (e) {
-        console.warn("REST API server offline. Falling back to local browser mock mode.", e);
+        console.warn("One or more REST API endpoints offline. Falling back to local browser mock mode.", e);
         dashboardData = JSON.parse(JSON.stringify(localFallbackData));
         prioritizationCount = dashboardData.prioritizationCount;
-        
-        // Update connection status in UI
+
+        // Update connection status indicator → Offline
         if (apiStatusIndicator) {
             apiStatusIndicator.className = "api-status offline";
             const textEl = apiStatusIndicator.querySelector(".api-status-text");
@@ -620,11 +673,13 @@ function initCharts() {
     // 1. Doughnut Chart: Risk Score Distribution
     const distCtx = document.getElementById("risk-distribution-chart").getContext("2d");
     
-    // Dynamically calculate segment counts to sync with assets data
-    const criticalCount = dashboardData.assets.filter(a => a.criticality === "critical").length + 10;
-    const highCount = dashboardData.assets.filter(a => a.criticality === "high").length + 25;
-    const mediumCount = dashboardData.assets.filter(a => a.criticality === "medium").length + 75;
-    const lowCount = Math.max(0, 250 - (criticalCount + highCount + mediumCount));
+    // Dynamically calculate segment counts — use server pre-computed values when
+    // available (from GET /api/risk-distribution), otherwise fall back to local calculation.
+    const dist = dashboardData.riskDistribution || {};
+    const criticalCount = dist.critical !== undefined ? dist.critical : dashboardData.assets.filter(a => a.criticality === "critical").length + 10;
+    const highCount     = dist.high     !== undefined ? dist.high     : dashboardData.assets.filter(a => a.criticality === "high").length + 25;
+    const mediumCount   = dist.medium   !== undefined ? dist.medium   : dashboardData.assets.filter(a => a.criticality === "medium").length + 75;
+    const lowCount      = dist.low      !== undefined ? dist.low      : Math.max(0, 250 - (criticalCount + highCount + mediumCount));
 
     // Doughnut segments data (Critical, High, Medium, Low)
     const distData = {

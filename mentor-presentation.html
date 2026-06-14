@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>REST API Explained – ClawSentinel Mentor Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    /* ══════════ RESET & TOKENS ══════════ */
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --bg:#07090f;
+      --bg1:#0d1117;
+      --bg2:#111827;
+      --bg3:#1a2235;
+      --border:rgba(96,165,250,0.12);
+      --border2:rgba(96,165,250,0.3);
+      --blue:#3b82f6;
+      --blue2:#60a5fa;
+      --purple:#a78bfa;
+      --green:#10b981;
+      --green2:#34d399;
+      --orange:#f97316;
+      --red:#ef4444;
+      --yellow:#fbbf24;
+      --text:#f1f5f9;
+      --text2:#94a3b8;
+      --text3:#475569;
+      --font:'Outfit',sans-serif;
+      --mono:'JetBrains Mono',monospace;
+    }
+    html{scroll-behavior:smooth;}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--font);
+      overflow-x:hidden;
+    }
+
+    /* ══════════ SLIDE SYSTEM ══════════ */
+    .slides-container{position:relative;}
+
+    section.slide{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      padding:60px 80px;
+      border-bottom:1px solid var(--border);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* subtle grid bg on each slide */
+    section.slide::before{
+      content:'';
+      position:absolute;inset:0;
+      background-image:
+        linear-gradient(var(--border) 1px,transparent 1px),
+        linear-gradient(90deg,var(--border) 1px,transparent 1px);
+      background-size:48px 48px;
+      pointer-events:none;
+      opacity:.5;
+    }
+
+    .slide-inner{position:relative;z-index:1;max-width:1200px;margin:0 auto;width:100%;}
+
+    /* slide number badge */
+    .slide-num{
+      font-size:11px;font-weight:700;letter-spacing:3px;
+      text-transform:uppercase;color:var(--blue2);
+      margin-bottom:16px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .slide-num::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    h1.slide-h1{
+      font-size:clamp(32px,5vw,64px);
+      font-weight:900;
+      letter-spacing:-2px;
+      line-height:1.1;
+      margin-bottom:16px;
+    }
+
+    h2.slide-h2{
+      font-size:clamp(24px,3vw,40px);
+      font-weight:800;
+      letter-spacing:-1px;
+      margin-bottom:12px;
+    }
+
+    .gradient-text{
+      background:linear-gradient(90deg,var(--blue2),var(--purple));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .slide-subtitle{
+      font-size:18px;color:var(--text2);
+      max-width:700px;line-height:1.7;
+      margin-bottom:40px;
+    }
+
+    /* ══════════ NAV ══════════ */
+    nav{
+      position:fixed;right:24px;top:50%;transform:translateY(-50%);
+      z-index:999;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    nav a{
+      width:8px;height:8px;
+      border-radius:50%;
+      background:var(--text3);
+      display:block;
+      transition:all .25s;
+    }
+    nav a.active{background:var(--blue2);transform:scale(1.5);}
+    nav a:hover{background:var(--text2);}
+
+    /* slide progress bar */
+    #progress-bar{
+      position:fixed;top:0;left:0;height:3px;
+      background:linear-gradient(90deg,var(--blue),var(--purple));
+      z-index:1000;
+      width:0%;
+      transition:width .15s;
+    }
+
+    /* ══════════ CARDS ══════════ */
+    .card{
+      background:var(--bg2);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:24px;
+      transition:border-color .3s;
+    }
+    .card:hover{border-color:var(--border2);}
+
+    .card-grid{
+      display:grid;gap:20px;
+    }
+    .col-2{grid-template-columns:1fr 1fr;}
+    .col-3{grid-template-columns:1fr 1fr 1fr;}
+    .col-4{grid-template-columns:repeat(4,1fr);}
+    @media(max-width:900px){
+      .col-2,.col-3,.col-4{grid-template-columns:1fr;}
+      section.slide{padding:40px 24px;}
+    }
+
+    /* ══════════ CODE BLOCK ══════════ */
+    .code-block{
+      background:#020409;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      font-family:var(--mono);
+      font-size:13px;
+    }
+    .code-block-header{
+      display:flex;align-items:center;gap:12px;
+      padding:10px 16px;
+      background:var(--bg3);
+      border-bottom:1px solid var(--border);
+    }
+    .cb-dots{display:flex;gap:5px;}
+    .cb-dot{width:10px;height:10px;border-radius:50%;}
+    .cb-dot.r{background:#ef4444;}
+    .cb-dot.y{background:#fbbf24;}
+    .cb-dot.g{background:#10b981;}
+    .cb-filename{
+      font-size:11px;color:var(--text2);
+      font-family:var(--mono);flex:1;
+    }
+    .code-block pre{
+      padding:20px;
+      overflow-x:auto;
+      line-height:1.9;
+      white-space:pre;
+    }
+    .code-block pre::-webkit-scrollbar{height:4px;}
+    .code-block pre::-webkit-scrollbar-thumb{background:var(--text3);}
+
+    /* syntax coloring helpers */
+    .kw{color:#c792ea;}
+    .fn{color:#82aaff;}
+    .str{color:#c3e88d;}
+    .num{color:#f78c6c;}
+    .cm{color:#546e7a;font-style:italic;}
+    .obj{color:#ffcb6b;}
+    .hl{
+      display:inline-block;
+      background:rgba(96,165,250,0.15);
+      border-left:3px solid var(--blue2);
+      padding-left:8px;
+      margin-left:-8px;
+      width:calc(100% + 8px);
+      border-radius:0 4px 4px 0;
+    }
+
+    /* ══════════ FLOW DIAGRAM ══════════ */
+    .flow{
+      display:flex;align-items:center;gap:0;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      padding:8px 0;
+    }
+
+    .flow-node{
+      display:flex;flex-direction:column;align-items:center;gap:10px;
+      min-width:140px;flex-shrink:0;
+    }
+
+    .flow-icon{
+      width:76px;height:76px;border-radius:18px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:34px;
+      position:relative;
+    }
+    .fi-browser{
+      background:linear-gradient(135deg,#1e3a8a,#2563eb);
+      box-shadow:0 0 32px rgba(37,99,235,.5);
+    }
+    .fi-http{
+      background:linear-gradient(135deg,#312e81,#6d28d9);
+      box-shadow:0 0 32px rgba(109,40,217,.4);
+    }
+    .fi-server{
+      background:linear-gradient(135deg,#064e3b,#059669);
+      box-shadow:0 0 32px rgba(5,150,105,.5);
+    }
+    .fi-db{
+      background:linear-gradient(135deg,#92400e,#d97706);
+      box-shadow:0 0 32px rgba(217,119,6,.4);
+    }
+
+    .flow-label{font-size:13px;font-weight:700;text-align:center;}
+    .flow-sub{font-size:10px;color:var(--text2);text-align:center;font-family:var(--mono);}
+
+    .flow-arrow{
+      flex:1;min-width:60px;
+      display:flex;flex-direction:column;align-items:center;
+      gap:4px;flex-shrink:0;padding:0 4px;
+    }
+
+    .fa-line{
+      width:100%;height:2px;
+      background:linear-gradient(90deg,var(--blue),var(--purple));
+      position:relative;
+      overflow:visible;
+    }
+    .fa-line.back{background:linear-gradient(90deg,var(--green),var(--green2));}
+
+    .fa-line::after{
+      content:'▶';position:absolute;right:-6px;top:-7px;
+      font-size:9px;color:var(--purple);
+    }
+    .fa-line.back::after{content:'◀';left:-6px;right:auto;color:var(--green);}
+
+    .fa-dot{
+      position:absolute;width:7px;height:7px;border-radius:50%;
+      background:var(--purple);top:-2.5px;
+      animation:slidefwd 1.6s linear infinite;
+    }
+    .fa-line.back .fa-dot{background:var(--green);animation:slidebk 1.6s linear infinite;}
+
+    @keyframes slidefwd{from{left:0}to{left:100%}}
+    @keyframes slidebk{from{left:100%}to{left:0}}
+
+    .fa-label{
+      font-size:9px;font-weight:700;
+      font-family:var(--mono);
+      padding:2px 7px;border-radius:4px;
+      white-space:nowrap;
+    }
+    .fa-label.req{background:rgba(96,165,250,.15);color:var(--blue2);}
+    .fa-label.res{background:rgba(16,185,129,.12);color:var(--green2);}
+
+    /* ══════════ METHOD BADGE ══════════ */
+    .badge{
+      display:inline-block;
+      font-size:10px;font-weight:800;
+      font-family:var(--mono);
+      padding:3px 10px;border-radius:6px;
+      letter-spacing:.5px;
+      vertical-align:middle;
+    }
+    .badge.GET{background:rgba(16,185,129,.2);color:var(--green);}
+    .badge.POST{background:rgba(96,165,250,.2);color:var(--blue2);}
+    .badge.good{background:rgba(16,185,129,.15);color:var(--green);}
+    .badge.warn{background:rgba(251,191,36,.15);color:var(--yellow);}
+    .badge.err{background:rgba(239,68,68,.15);color:var(--red);}
+
+    /* ══════════ ENDPOINT ROW ══════════ */
+    .ep-row{
+      display:flex;align-items:flex-start;gap:16px;
+      padding:16px;
+      background:var(--bg3);
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin-bottom:12px;
+      cursor:pointer;
+      transition:border-color .25s, background .25s;
+    }
+    .ep-row:hover{border-color:var(--border2);background:#1e2d44;}
+    .ep-row.active-ep{border-color:var(--blue2);background:#162033;}
+
+    .ep-path{
+      font-family:var(--mono);font-size:14px;font-weight:700;
+      color:#fff;flex:1;
+    }
+    .ep-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6;}
+    .ep-fire-btn{
+      padding:6px 14px;border-radius:8px;
+      background:linear-gradient(90deg,rgba(96,165,250,.2),rgba(167,139,250,.15));
+      border:1px solid var(--border2);
+      color:var(--blue2);font-family:var(--font);font-size:12px;font-weight:700;
+      cursor:pointer;white-space:nowrap;
+      transition:all .2s;flex-shrink:0;
+    }
+    .ep-fire-btn:hover{background:rgba(96,165,250,.3);transform:translateY(-1px);}
+    .ep-fire-btn.loading{color:var(--text3);pointer-events:none;}
+
+    /* ══════════ CONSOLE ══════════ */
+    .console{
+      background:#03060d;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    .console-bar{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 16px;
+      background:var(--bg3);
+      border-bottom:1px solid var(--border);
+    }
+    .cb-dots2{display:flex;gap:5px;}
+    .cb-d{width:9px;height:9px;border-radius:50%;}
+    .console-title{font-size:11px;color:var(--text2);font-family:var(--mono);flex:1;}
+    .console-body{
+      min-height:160px;max-height:320px;
+      overflow-y:auto;
+      padding:14px 18px;
+      font-family:var(--mono);font-size:12px;
+      line-height:2;
+    }
+    .console-body::-webkit-scrollbar{width:4px;}
+    .console-body::-webkit-scrollbar-thumb{background:var(--text3);}
+    .lg{display:block;animation:fadeUp .2s ease;}
+    .lg-t{color:var(--text3);}
+    .lg-s{color:var(--blue2);}
+    .lg-r{color:var(--green);}
+    .lg-e{color:var(--red);}
+    .lg-i{color:var(--yellow);}
+    .lg-json{
+      background:rgba(96,165,250,.06);
+      border-left:2px solid var(--blue2);
+      padding:3px 10px;margin:2px 0 2px 14px;
+      border-radius:0 4px 4px 0;
+      color:#93c5fd;white-space:pre;
+      display:block;font-size:11px;
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ══════════ LIVE METRICS ══════════ */
+    .metrics-row{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+      margin-bottom:16px;
+    }
+    @media(max-width:700px){.metrics-row{grid-template-columns:repeat(2,1fr);}}
+
+    .metric{
+      background:var(--bg3);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:16px;
+      transition:border-color .3s,transform .3s;
+    }
+    .metric.pop{border-color:var(--green);animation:pop .4s ease;}
+    @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+    .metric-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:8px;}
+    .metric-val{font-size:30px;font-weight:900;letter-spacing:-1px;}
+    .mv-red{color:var(--red);}
+    .mv-org{color:var(--orange);}
+    .mv-grn{color:var(--green);}
+    .mv-wht{color:#fff;}
+
+    /* ══════════ STEPS ══════════ */
+    .steps{display:flex;flex-direction:column;gap:16px;}
+    .step{
+      display:flex;gap:20px;align-items:flex-start;
+      padding:20px;
+      background:var(--bg3);
+      border:1px solid var(--border);
+      border-radius:12px;
+    }
+    .step-circle{
+      width:36px;height:36px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,var(--blue),var(--purple));
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;font-weight:800;
+    }
+    .step-body h4{font-size:15px;font-weight:700;margin-bottom:4px;}
+    .step-body p{font-size:13px;color:var(--text2);line-height:1.7;}
+    .step-body code{
+      font-family:var(--mono);font-size:12px;
+      color:var(--blue2);
+      background:rgba(96,165,250,.08);
+      padding:1px 6px;border-radius:4px;
+    }
+
+    /* ══════════ COMPARISON ══════════ */
+    .compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    .compare-col{
+      background:var(--bg3);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .compare-head{
+      padding:12px 18px;
+      font-size:12px;font-weight:700;
+      border-bottom:1px solid var(--border);
+    }
+    .compare-head.client{
+      background:rgba(37,99,235,.12);
+      color:var(--blue2);
+    }
+    .compare-head.server{
+      background:rgba(5,150,105,.12);
+      color:var(--green);
+    }
+    .compare-body{padding:18px;}
+
+    /* ══════════ STATUS INDICATOR ══════════ */
+    #server-pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 16px;border-radius:20px;
+      font-size:12px;font-weight:700;
+      border:1px solid var(--border);
+      background:var(--bg2);
+      color:var(--text2);
+      margin-bottom:32px;
+    }
+    #server-pill.on{border-color:rgba(16,185,129,.4);color:var(--green);}
+    #server-pill.off{border-color:rgba(239,68,68,.4);color:var(--red);}
+    #spill-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--text3);
+    }
+    #server-pill.on #spill-dot{
+      background:var(--green);
+      box-shadow:0 0 6px var(--green);
+      animation:pulse2 1.8s infinite;
+    }
+    #server-pill.off #spill-dot{background:var(--red);}
+    @keyframes pulse2{0%,100%{opacity:1}50%{opacity:.3}}
+
+    /* ══════════ TOAST ══════════ */
+    #toast{
+      position:fixed;bottom:28px;right:28px;
+      background:var(--bg3);
+      border:1px solid var(--border2);
+      border-radius:12px;
+      padding:14px 20px;
+      font-size:13px;
+      display:flex;align-items:center;gap:10px;
+      box-shadow:0 8px 40px rgba(0,0,0,.6);
+      transform:translateY(100px);opacity:0;
+      transition:all .35s cubic-bezier(.34,1.56,.64,1);
+      z-index:9999;max-width:380px;
+    }
+    #toast.show{transform:translateY(0);opacity:1;}
+
+    /* ══════════ TABLE ══════════ */
+    .data-table{width:100%;border-collapse:collapse;font-size:12px;}
+    .data-table th{
+      text-align:left;padding:8px 14px;
+      color:var(--text3);font-size:10px;font-weight:700;
+      letter-spacing:1px;text-transform:uppercase;
+      background:var(--bg3);border-bottom:1px solid var(--border);
+    }
+    .data-table td{
+      padding:10px 14px;
+      border-bottom:1px solid var(--border);
+      color:var(--text2);
+      transition:background .2s;
+    }
+    .data-table tr:hover td{background:rgba(96,165,250,.04);}
+    .data-table tr:last-child td{border:none;}
+    .data-table td.updated{animation:flash .5s ease;}
+    @keyframes flash{0%{background:rgba(16,185,129,.2)}100%{background:transparent}}
+
+    .sev{font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;font-family:var(--mono);text-transform:uppercase;}
+    .sev.critical{background:rgba(239,68,68,.18);color:var(--red);}
+    .sev.high{background:rgba(249,115,22,.18);color:var(--orange);}
+    .sev.medium{background:rgba(251,191,36,.18);color:var(--yellow);}
+    .sev.low{background:rgba(16,185,129,.18);color:var(--green);}
+
+    /* ══════════ GLOWING HERO BG ══════════ */
+    .hero-glow{
+      position:absolute;
+      width:600px;height:600px;
+      border-radius:50%;
+      background:radial-gradient(circle,rgba(99,130,255,.12) 0%,transparent 70%);
+      top:-100px;right:-100px;
+      pointer-events:none;
+    }
+
+    /* ══════════ MISC ══════════ */
+    .tag{
+      display:inline-block;
+      font-size:10px;font-weight:700;
+      padding:2px 10px;border-radius:20px;
+      font-family:var(--mono);
+    }
+    .tag.blue{background:rgba(96,165,250,.12);color:var(--blue2);}
+    .tag.green{background:rgba(16,185,129,.12);color:var(--green);}
+    .tag.purple{background:rgba(167,139,250,.12);color:var(--purple);}
+
+    .ctrl-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+    .ctrl-btn{
+      padding:8px 18px;border-radius:8px;
+      border:1px solid var(--border2);background:transparent;
+      color:var(--blue2);font-family:var(--font);font-size:12px;font-weight:700;
+      cursor:pointer;transition:all .2s;
+    }
+    .ctrl-btn:hover{background:rgba(96,165,250,.12);}
+    .ctrl-btn.stop{color:var(--red);border-color:rgba(239,68,68,.4);}
+    .ctrl-btn.stop:hover{background:rgba(239,68,68,.08);}
+    #ar-indicator{font-size:12px;color:var(--text3);font-family:var(--mono);margin-left:auto;}
+    #ar-indicator.active{color:var(--green);}
+
+    .table-wrap{overflow-x:auto;border-radius:0 0 12px 12px;border:1px solid var(--border);}
+
+    /* ══════════ SLIDES SPECIFIC BACKGROUNDS ══════════ */
+    #slide-1{
+      background:linear-gradient(135deg,#07090f 60%,rgba(37,99,235,.06));
+    }
+    #slide-3{
+      background:linear-gradient(135deg,#07090f,rgba(5,150,105,.04));
+    }
+    #slide-5{
+      background:linear-gradient(135deg,#07090f,rgba(167,139,250,.04));
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- ═════════════════ NAV DOTS ═════════════════ -->
+<nav id="nav-dots">
+  <a href="#slide-1" title="Intro"></a>
+  <a href="#slide-2" title="What is REST API?"></a>
+  <a href="#slide-3" title="Architecture"></a>
+  <a href="#slide-4" title="Code Side-by-Side"></a>
+  <a href="#slide-5" title="Live API Demo"></a>
+  <a href="#slide-6" title="Endpoints Explorer"></a>
+  <a href="#slide-7" title="Live Data"></a>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 1 — TITLE                          -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-1">
+  <div class="hero-glow"></div>
+  <div class="slide-inner">
+    <div class="slide-num">Slide 01 / 07 &nbsp;·&nbsp; ClawSentinel Project</div>
+
+    <div id="server-pill">
+      <div id="spill-dot"></div>
+      <span id="spill-text">Checking server…</span>
+    </div>
+
+    <h1 class="slide-h1">
+      How My App Talks<br/>
+      <span class="gradient-text">to a Dummy Server</span>
+    </h1>
+    <p class="slide-subtitle">
+      A step-by-step walkthrough of <strong>REST API communication</strong> between the
+      ClawSentinel browser dashboard and a Python HTTP backend — with live, clickable demos.
+    </p>
+
+    <div class="card-grid col-3" style="max-width:700px;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">🌐</div>
+        <div style="font-size:13px;font-weight:700;">Frontend</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">HTML + JavaScript<br/>app.js / index.html</div>
+      </div>
+      <div class="card" style="text-align:center;background:var(--bg3);">
+        <div style="font-size:32px;margin-bottom:8px;">↔️</div>
+        <div style="font-size:13px;font-weight:700;">REST API</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">HTTP + JSON<br/>fetch() requests</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">🐍</div>
+        <div style="font-size:13px;font-weight:700;">Backend</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">Python HTTPServer<br/>server.py</div>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;font-size:13px;color:var(--text3);">
+      ↓ Scroll down or click the dots on the right to navigate
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 2 — WHAT IS REST API?              -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-2">
+  <div class="slide-inner">
+    <div class="slide-num">Slide 02 / 07 &nbsp;·&nbsp; Concept</div>
+    <h2 class="slide-h2">What is a <span class="gradient-text">REST API</span>?</h2>
+    <p class="slide-subtitle">REST stands for <strong>Representational State Transfer</strong>. It is a way for two programs to talk to each other over HTTP — the same protocol your browser uses to load websites.</p>
+
+    <div class="card-grid col-2" style="margin-bottom:32px;">
+      <div class="card">
+        <div style="font-size:24px;margin-bottom:12px;">📞 Like a Phone Call</div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">
+          The <strong style="color:#fff">browser</strong> (client) dials a number (URL).<br/>
+          The <strong style="color:#fff">server</strong> picks up and answers with data (JSON).<br/>
+          The call ends — then starts again next time.
+        </p>
+      </div>
+      <div class="card">
+        <div style="font-size:24px;margin-bottom:12px;">🍽️ Like Ordering Food</div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">
+          You (browser) tell the waiter (HTTP) what you want.<br/>
+          The kitchen (server) prepares it and sends it back.<br/>
+          You don't need to know <em>how</em> it was cooked.
+        </p>
+      </div>
+    </div>
+
+    <div class="card-grid col-4">
+      <div class="card" style="text-align:center;">
+        <span class="badge GET" style="font-size:13px;padding:6px 16px;">GET</span>
+        <div style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6;">
+          <strong style="color:#fff">READ data</strong><br/>
+          "Give me the dashboard info"
+        </div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <span class="badge POST" style="font-size:13px;padding:6px 16px;">POST</span>
+        <div style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6;">
+          <strong style="color:#fff">SEND data</strong><br/>
+          "Here is an action to run"
+        </div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:20px;margin-bottom:6px;color:var(--yellow);">200</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+          <strong style="color:#fff">HTTP 200</strong><br/>
+          "Success — here is your data"
+        </div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:20px;margin-bottom:6px;color:var(--orange);">{ }</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+          <strong style="color:#fff">JSON</strong><br/>
+          The data format both sides agree on
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 3 — ARCHITECTURE                   -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="slide-num">Slide 03 / 07 &nbsp;·&nbsp; System Architecture</div>
+    <h2 class="slide-h2">How ClawSentinel Is <span class="gradient-text">Structured</span></h2>
+    <p class="slide-subtitle">Every action in the dashboard triggers an HTTP request from the browser to the Python server running on <code style="font-family:var(--mono);color:var(--blue2);font-size:14px;">localhost:8000</code></p>
+
+    <!-- Flow Diagram -->
+    <div class="card" style="margin-bottom:32px;padding:36px;">
+      <div class="flow" id="arch-flow">
+        <div class="flow-node">
+          <div class="flow-icon fi-browser">🌐</div>
+          <div class="flow-label">Browser</div>
+          <div class="flow-sub">index.html</div>
+          <div class="flow-sub">app.js</div>
+        </div>
+        <div class="flow-arrow">
+          <div class="fa-line"><div class="fa-dot"></div></div>
+          <div class="fa-label req">fetch('/api/...')</div>
+          <div class="fa-line back"><div class="fa-dot"></div></div>
+          <div class="fa-label res">JSON response</div>
+        </div>
+        <div class="flow-node">
+          <div class="flow-icon fi-http">🔀</div>
+          <div class="flow-label">HTTP Layer</div>
+          <div class="flow-sub">port 8000</div>
+          <div class="flow-sub">GET / POST</div>
+        </div>
+        <div class="flow-arrow">
+          <div class="fa-line"><div class="fa-dot"></div></div>
+          <div class="fa-label req">routes to handler</div>
+          <div class="fa-line back"><div class="fa-dot"></div></div>
+          <div class="fa-label res">json.dumps(data)</div>
+        </div>
+        <div class="flow-node">
+          <div class="flow-icon fi-server">🐍</div>
+          <div class="flow-label">Python Server</div>
+          <div class="flow-sub">server.py</div>
+          <div class="flow-sub">HTTPServer</div>
+        </div>
+        <div class="flow-arrow">
+          <div class="fa-line"><div class="fa-dot"></div></div>
+          <div class="fa-label req">reads / modifies</div>
+          <div class="fa-line back"><div class="fa-dot"></div></div>
+          <div class="fa-label res">returns state</div>
+        </div>
+        <div class="flow-node">
+          <div class="flow-icon fi-db">🗄️</div>
+          <div class="flow-label">In-Memory DB</div>
+          <div class="flow-sub">dashboard_data</div>
+          <div class="flow-sub">Python dict</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 endpoints summary -->
+    <div class="card-grid col-3">
+      <div class="card" style="display:flex;gap:12px;align-items:center;">
+        <span class="badge GET">GET</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;font-family:var(--mono);">/api/dashboard</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px;">Load all dashboard data on startup</div>
+        </div>
+      </div>
+      <div class="card" style="display:flex;gap:12px;align-items:center;">
+        <span class="badge POST">POST</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;font-family:var(--mono);">/api/refresh</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px;">Simulate live risk score drift</div>
+        </div>
+      </div>
+      <div class="card" style="display:flex;gap:12px;align-items:center;">
+        <span class="badge POST">POST</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;font-family:var(--mono);">/api/mitigate</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px;">Deploy security playbook for an asset</div>
+        </div>
+      </div>
+      <div class="card" style="display:flex;gap:12px;align-items:center;">
+        <span class="badge POST">POST</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;font-family:var(--mono);">/api/prioritization-count</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px;">Sync alert counter with server state</div>
+        </div>
+      </div>
+      <div class="card" style="display:flex;gap:12px;align-items:center;">
+        <span class="badge POST">POST</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;font-family:var(--mono);">/api/generate-report</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px;">Build HTML security report server-side</div>
+        </div>
+      </div>
+      <div class="card" style="background:rgba(96,165,250,.04);display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;">✅</div>
+          <div style="font-size:12px;color:var(--text2);">All endpoints have<br/><strong style="color:#fff">offline fallback</strong><br/>in app.js</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 4 — CODE SIDE BY SIDE              -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="slide-num">Slide 04 / 07 &nbsp;·&nbsp; Code Walkthrough</div>
+    <h2 class="slide-h2">Client vs Server — <span class="gradient-text">Code Side by Side</span></h2>
+    <p class="slide-subtitle">Tracing one complete request cycle: <strong>GET /api/dashboard</strong></p>
+
+    <div class="compare" style="margin-bottom:28px;">
+      <!-- CLIENT -->
+      <div class="compare-col">
+        <div class="compare-head client">🌐 app.js — Browser (Client)</div>
+        <div class="compare-body">
+          <div class="code-block">
+            <div class="code-block-header">
+              <div class="cb-dots"><div class="cb-dot r"></div><div class="cb-dot y"></div><div class="cb-dot g"></div></div>
+              <div class="cb-filename">app.js — fetchDashboardData()</div>
+            </div>
+            <pre><span class="cm">// 1. Browser calls fetch() with endpoint URL</span>
+<span class="kw">async function</span> <span class="fn">fetchDashboardData</span>() {
+  <span class="kw">try</span> {
+
+<span class="hl">    <span class="kw">const</span> <span class="obj">response</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/dashboard'</span>);</span>
+
+    <span class="cm">// 2. Check the server sent back 200 OK</span>
+    <span class="kw">if</span> (!<span class="obj">response</span>.ok)
+      <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">"Error: "</span> + <span class="obj">response</span>.status);
+
+<span class="hl">    <span class="cm">// 3. Parse JSON body into JavaScript object</span>
+    dashboardData = <span class="kw">await</span> <span class="obj">response</span>.<span class="fn">json</span>();</span>
+
+    <span class="cm">// 4. Use the data to update the UI</span>
+    <span class="fn">updateKPICards</span>();
+    <span class="fn">renderAssetsTable</span>();
+
+  } <span class="kw">catch</span> (e) {
+    <span class="cm">// 5. If server offline → use local mock data</span>
+    dashboardData = localFallbackData;
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- SERVER -->
+      <div class="compare-col">
+        <div class="compare-head server">🐍 server.py — Python (Server)</div>
+        <div class="compare-body">
+          <div class="code-block">
+            <div class="code-block-header">
+              <div class="cb-dots"><div class="cb-dot r"></div><div class="cb-dot y"></div><div class="cb-dot g"></div></div>
+              <div class="cb-filename">server.py — do_GET() handler</div>
+            </div>
+            <pre><span class="cm"># Server listens for incoming HTTP requests</span>
+<span class="kw">class</span> <span class="obj">ClawSentinelAPIHandler</span>(<span class="obj">SimpleHTTPRequestHandler</span>):
+
+  <span class="kw">def</span> <span class="fn">do_GET</span>(<span class="kw">self</span>):
+
+<span class="hl">    <span class="cm"># 1. Check which URL was requested</span>
+    <span class="kw">if</span> <span class="kw">self</span>.path == <span class="str">'/api/dashboard'</span>:</span>
+
+      <span class="cm"># 2. Send HTTP 200 status header</span>
+      <span class="kw">self</span>.<span class="fn">send_response</span>(<span class="num">200</span>)
+      <span class="kw">self</span>.<span class="fn">send_header</span>(
+        <span class="str">'Content-Type'</span>, <span class="str">'application/json'</span>)
+      <span class="kw">self</span>.<span class="fn">end_headers</span>()
+
+<span class="hl">      <span class="cm"># 3. Convert Python dict → JSON string</span>
+      <span class="kw">self</span>.<span class="fn">wfile.write</span>(
+        json.<span class="fn">dumps</span>(dashboard_data).<span class="fn">encode</span>())</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP BREAKDOWN -->
+    <div class="steps">
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-body">
+          <h4>Browser sends HTTP GET request</h4>
+          <p><code>fetch('/api/dashboard')</code> → opens a TCP connection to <code>localhost:8000</code> and sends a GET request. No body needed for GET.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-body">
+          <h4>Server routes the request</h4>
+          <p>Python's <code>do_GET()</code> fires. <code>self.path</code> equals <code>'/api/dashboard'</code> so the dashboard handler block runs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-body">
+          <h4>Server serializes data to JSON</h4>
+          <p><code>json.dumps(dashboard_data)</code> converts the in-memory Python dictionary to a JSON string and writes it to the HTTP response body.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-body">
+          <h4>Browser parses JSON → updates UI</h4>
+          <p><code>response.json()</code> parses the string back into a JS object. Then <code>updateKPICards()</code>, <code>renderAssetsTable()</code> etc. refresh the dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 5 — POST REQUEST CODE              -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="slide-num">Slide 05 / 07 &nbsp;·&nbsp; POST Deep-Dive</div>
+    <h2 class="slide-h2">POST Requests — <span class="gradient-text">Sending Data to Server</span></h2>
+    <p class="slide-subtitle">Unlike GET, a POST request carries a <strong>JSON body</strong> — data sent from the browser to the server. Example: Deploy Mitigation Playbook.</p>
+
+    <div class="compare" style="margin-bottom:28px;">
+      <div class="compare-col">
+        <div class="compare-head client">🌐 app.js — executeMitigationPlaybook()</div>
+        <div class="compare-body">
+          <div class="code-block">
+            <div class="code-block-header">
+              <div class="cb-dots"><div class="cb-dot r"></div><div class="cb-dot y"></div><div class="cb-dot g"></div></div>
+              <div class="cb-filename">app.js</div>
+            </div>
+            <pre><span class="kw">async function</span> <span class="fn">executeMitigationPlaybook</span>(
+  assetName, cve
+) {
+  <span class="kw">const</span> <span class="obj">response</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/mitigate'</span>, {
+
+<span class="hl">    method: <span class="str">'POST'</span>,         <span class="cm">// ← Not GET!</span></span>
+<span class="hl">    headers: {
+      <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>
+    },</span>
+<span class="hl">    body: <span class="obj">JSON</span>.<span class="fn">stringify</span>({   <span class="cm">// ← Send data</span>
+      assetName,
+      cve
+    })</span>
+  });
+
+  <span class="kw">const</span> <span class="obj">data</span> = <span class="kw">await</span> <span class="obj">response</span>.<span class="fn">json</span>();
+  <span class="fn">alert</span>(<span class="obj">data</span>.message);
+  <span class="fn">renderAssetsTable</span>();   <span class="cm">// refresh UI</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="compare-col">
+        <div class="compare-head server">🐍 server.py — do_POST() /api/mitigate</div>
+        <div class="compare-body">
+          <div class="code-block">
+            <div class="code-block-header">
+              <div class="cb-dots"><div class="cb-dot r"></div><div class="cb-dot y"></div><div class="cb-dot g"></div></div>
+              <div class="cb-filename">server.py</div>
+            </div>
+            <pre><span class="kw">def</span> <span class="fn">do_POST</span>(<span class="kw">self</span>):
+  <span class="cm"># 1. Read how many bytes are in the body</span>
+  length = <span class="fn">int</span>(<span class="kw">self</span>.headers[<span class="str">'Content-Length'</span>])
+
+<span class="hl">  <span class="cm"># 2. Read &amp; parse the JSON body</span>
+  raw  = <span class="kw">self</span>.rfile.<span class="fn">read</span>(length).<span class="fn">decode</span>()
+  body = json.<span class="fn">loads</span>(raw)</span>
+
+  <span class="kw">if</span> <span class="kw">self</span>.path == <span class="str">'/api/mitigate'</span>:
+    name = body[<span class="str">'assetName'</span>]
+    cve  = body[<span class="str">'cve'</span>]
+
+<span class="hl">    <span class="cm"># 3. Mutate in-memory state</span>
+    <span class="kw">for</span> asset <span class="kw">in</span> dashboard_data[<span class="str">'assets'</span>]:
+      <span class="kw">if</span> asset[<span class="str">'name'</span>] == name:
+        asset[<span class="str">'status'</span>] = <span class="str">'in-progress'</span></span>
+
+    <span class="cm"># 4. Return confirmation JSON</span>
+    <span class="kw">self</span>.<span class="fn">send_response</span>(<span class="num">200</span>)
+    <span class="kw">self</span>.<span class="fn">end_headers</span>()
+    <span class="kw">self</span>.wfile.<span class="fn">write</span>(json.<span class="fn">dumps</span>({
+      <span class="str">"success"</span>: <span class="kw">True</span>,
+      <span class="str">"message"</span>: <span class="str">f"Playbook for </span>{name}<span class="str"> started"</span>
+    }).<span class="fn">encode</span>())</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Offline Fallback explanation -->
+    <div class="card" style="border-color:rgba(251,191,36,.3);">
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="font-size:28px;flex-shrink:0;">🔒</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--yellow);">Offline Fallback — Production-Ready Pattern</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.7;">
+            Every <code style="color:var(--blue2);font-family:var(--mono)">fetch()</code> call in <code style="color:var(--blue2);font-family:var(--mono)">app.js</code> is wrapped in a
+            <code style="color:var(--purple);font-family:var(--mono)">try { } catch { }</code> block.
+            If the server is offline, the UI keeps working using the
+            <code style="color:var(--yellow);font-family:var(--mono)">localFallbackData</code> mock dataset in the browser.
+            This shows <strong style="color:#fff">fault-tolerant design</strong> — even with no server, the app still works.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 6 — LIVE ENDPOINT EXPLORER         -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="slide-num">Slide 06 / 07 &nbsp;·&nbsp; Interactive Demo</div>
+    <h2 class="slide-h2">Live Endpoint <span class="gradient-text">Explorer</span></h2>
+    <p class="slide-subtitle">Fire real HTTP requests right here. Watch the console log each request and response exactly as it happens.</p>
+
+    <!-- Endpoints -->
+    <div style="margin-bottom:24px;">
+      <div class="ep-row" id="ep-dashboard">
+        <span class="badge GET">GET</span>
+        <div style="flex:1;">
+          <div class="ep-path">/api/dashboard</div>
+          <div class="ep-desc">Load full dashboard state — called on page startup. Returns: criticalCVEs, highNodes, avgRiskScore, assets[], topCVEs[], trendData, sparklineData.</div>
+        </div>
+        <button class="ep-fire-btn" id="fbtn-dashboard" onclick="fire('dashboard')">▶ Fire Request</button>
+      </div>
+      <div class="ep-row" id="ep-refresh">
+        <span class="badge POST">POST</span>
+        <div style="flex:1;">
+          <div class="ep-path">/api/refresh</div>
+          <div class="ep-desc">Simulate real-time risk score drift. Server mutates all asset scores ±0.2, updates criticality bands, pushes new sparkline point. Returns full updated dashboard.</div>
+        </div>
+        <button class="ep-fire-btn" id="fbtn-refresh" onclick="fire('refresh')">▶ Fire Request</button>
+      </div>
+      <div class="ep-row" id="ep-mitigate">
+        <span class="badge POST">POST</span>
+        <div style="flex:1;">
+          <div class="ep-path">/api/mitigate</div>
+          <div class="ep-desc">Deploy mitigation playbook for GPU-88 / CVE-2024-1102. Server sets asset status = "in-progress" and returns a confirmation message string.</div>
+        </div>
+        <button class="ep-fire-btn" id="fbtn-mitigate" onclick="fire('mitigate')">▶ Fire Request</button>
+      </div>
+      <div class="ep-row" id="ep-priority">
+        <span class="badge POST">POST</span>
+        <div style="flex:1;">
+          <div class="ep-path">/api/prioritization-count</div>
+          <div class="ep-desc">Save alert count = 5 to server. Server clamps the value, stores it in memory, echoes it back. Syncs the header badge and sidebar counter.</div>
+        </div>
+        <button class="ep-fire-btn" id="fbtn-priority" onclick="fire('priority')">▶ Fire Request</button>
+      </div>
+      <div class="ep-row" id="ep-report">
+        <span class="badge POST">POST</span>
+        <div style="flex:1;">
+          <div class="ep-path">/api/generate-report</div>
+          <div class="ep-desc">Generate server-side HTML security report (executive summary, all DCs, with KPIs + charts + table). Returns { html: "..." } with full rendered HTML string.</div>
+        </div>
+        <button class="ep-fire-btn" id="fbtn-report" onclick="fire('report')">▶ Fire Request</button>
+      </div>
+    </div>
+
+    <!-- Console -->
+    <div class="console">
+      <div class="console-bar">
+        <div class="cb-dots2">
+          <div class="cb-d" style="background:#ef4444"></div>
+          <div class="cb-d" style="background:#fbbf24"></div>
+          <div class="cb-d" style="background:#10b981"></div>
+        </div>
+        <div class="console-title">network-console.log — live HTTP request/response trace</div>
+        <button style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--font);" onclick="clearLog()">✕ Clear</button>
+      </div>
+      <div class="console-body" id="log-body">
+        <span class="lg"><span class="lg-i">ℹ  Mentor Presentation loaded.</span></span>
+        <span class="lg"><span class="lg-i">ℹ  Click any "Fire Request" button above to send a live API call.</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  SLIDE 7 — LIVE DATA + AUTO REFRESH       -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="slide-num">Slide 07 / 07 &nbsp;·&nbsp; Live Data</div>
+    <h2 class="slide-h2">Live Server Data — <span class="gradient-text">Updated in Real Time</span></h2>
+    <p class="slide-subtitle">Data below is fetched from the Python server. Click "Start Auto-Refresh" to simulate a real-time security dashboard polling every 5 seconds.</p>
+
+    <!-- KPI Metrics -->
+    <div class="metrics-row" id="kpi-row">
+      <div class="metric"><div class="metric-lbl">Critical CVEs</div><div class="metric-val mv-red" id="kpi-crit">–</div></div>
+      <div class="metric"><div class="metric-lbl">High Risk Nodes</div><div class="metric-val mv-org" id="kpi-high">–</div></div>
+      <div class="metric"><div class="metric-lbl">Avg Risk Score</div><div class="metric-val mv-wht" id="kpi-avg">–</div></div>
+      <div class="metric"><div class="metric-lbl">Compliance Rate</div><div class="metric-val mv-grn" id="kpi-comp">–</div></div>
+    </div>
+
+    <!-- Auto refresh control -->
+    <div class="ctrl-row">
+      <span style="font-size:13px;color:var(--text2);font-weight:600;">Auto-Refresh Simulation:</span>
+      <button class="ctrl-btn" onclick="startAR()">▶ Start (every 5s)</button>
+      <button class="ctrl-btn stop" onclick="stopAR()">■ Stop</button>
+      <button class="ctrl-btn" onclick="fire('dashboard')">⟳ Manual Refresh</button>
+      <span id="ar-indicator">● STOPPED</span>
+    </div>
+
+    <!-- Asset Table -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Asset</th><th>IP Address</th>
+            <th>Type</th><th>Severity</th>
+            <th>Score</th><th>CVE</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="assets-body">
+          <tr><td colspan="8" style="color:var(--text3);text-align:center;padding:32px;">
+            Waiting for data — click "Manual Refresh" or "Start Auto-Refresh"
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary box -->
+    <div class="card" style="margin-top:24px;border-color:rgba(16,185,129,.2);">
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+        <div style="font-size:24px;">🎯</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px;">What This Demonstrates to Your Mentor</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text2);">
+            <span class="tag blue">Client-Server Separation</span>
+            <span class="tag green">REST API Endpoints</span>
+            <span class="tag purple">JSON Data Exchange</span>
+            <span class="tag blue">Real-Time Polling</span>
+            <span class="tag green">Offline Fallback</span>
+            <span class="tag purple">State Mutation (POST)</span>
+            <span class="tag blue">fetch() + async/await</span>
+            <span class="tag green">Python HTTPServer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TOAST ════ -->
+<div id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Done</span>
+</div>
+
+<!-- ════════════════════════ SCRIPT ════════════════════════ -->
+<script>
+/* ── helpers ── */
+const $=id=>document.getElementById(id);
+let _data=null;
+
+function ts(){return new Date().toLocaleTimeString('en-GB',{hour12:false});}
+
+function lg(cls,html){
+  const b=$('log-body');
+  const el=document.createElement('span');
+  el.className='lg';
+  el.innerHTML=`<span class="lg-t">[${ts()}]</span> <span class="lg-${cls}">${html}</span>`;
+  b.appendChild(el);
+  b.scrollTop=b.scrollHeight;
+}
+function lgJson(obj){
+  const b=$('log-body');
+  const el=document.createElement('span');
+  el.className='lg';
+  const pre=document.createElement('pre');
+  pre.className='lg-json';
+  let s=JSON.stringify(obj,null,2);
+  if(s.length>700)s=s.slice(0,700)+'\n  … (truncated)';
+  pre.textContent=s;
+  el.appendChild(pre);
+  b.appendChild(el);
+  b.scrollTop=b.scrollHeight;
+}
+function clearLog(){$('log-body').innerHTML='';lg('i','Console cleared.');}
+
+let _toast;
+function toast(icon,msg){
+  $('toast-icon').textContent=icon;
+  $('toast-msg').textContent=msg;
+  const t=$('toast');
+  t.classList.add('show');
+  clearTimeout(_toast);
+  _toast=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* ── server status ── */
+async function checkServer(){
+  const pill=$('server-pill');
+  try{
+    const r=await fetch('/api/dashboard',{signal:AbortSignal.timeout(2000)});
+    if(r.ok){
+      pill.className='on';
+      $('spill-text').textContent='server.py is ONLINE — localhost:8000';
+      lg('r','✅ Server status check → 200 OK  (server.py is running)');
+      return true;
+    }
+  }catch{
+    pill.className='off';
+    $('spill-text').textContent='server.py OFFLINE — run: python server.py';
+    lg('e','❌ Server offline. Open a terminal and run: python server.py');
+  }
+  return false;
+}
+
+/* ── endpoint config ── */
+const ENDPOINTS={
+  dashboard:{method:'GET', url:'/api/dashboard', body:null,
+    logReq:'GET /api/dashboard  (no body — just requesting data)'},
+  refresh:{method:'POST',url:'/api/refresh',body:{},
+    logReq:'POST /api/refresh  body → {}'},
+  mitigate:{method:'POST',url:'/api/mitigate',
+    body:{assetName:'GPU-88',cve:'CVE-2024-1102'},
+    logReq:'POST /api/mitigate  body →'},
+  priority:{method:'POST',url:'/api/prioritization-count',
+    body:{count:5},logReq:'POST /api/prioritization-count  body →'},
+  report:{method:'POST',url:'/api/generate-report',
+    body:{type:'executive',scope:'all',incKpi:true,incCharts:true,incTable:true},
+    logReq:'POST /api/generate-report  body →'},
+};
+
+async function fire(name){
+  const cfg=ENDPOINTS[name];
+  const btn=$(`fbtn-${name}`);
+  const row=$(`ep-${name}`);
+
+  if(btn){btn.classList.add('loading');btn.textContent='Sending…';}
+  if(row) row.classList.add('active-ep');
+
+  lg('s',`⬆ ${cfg.logReq}`);
+  if(cfg.body && Object.keys(cfg.body).length>0) lgJson(cfg.body);
+
+  const t0=performance.now();
+  try{
+    const opts={method:cfg.method,headers:{}};
+    if(cfg.body!==null){
+      opts.headers['Content-Type']='application/json';
+      opts.body=JSON.stringify(cfg.body);
+    }
+    const res=await fetch(cfg.url,opts);
+    const ms=Math.round(performance.now()-t0);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+
+    lg('r',`⬇ ${res.status} OK ← ${cfg.url}   [${ms}ms]`);
+    lgJson(data);
+
+    if(name==='dashboard'||name==='refresh'){
+      _data=data;
+      updateDisplay(data,'live');
+    }
+    if(name==='mitigate'){
+      lg('i',`📣 Server message: "${data.message}"`);
+      if(_data){
+        const a=_data.assets.find(x=>x.name==='GPU-88');
+        if(a)a.status='in-progress';
+        updateDisplay(_data,'live');
+      }
+    }
+    if(name==='report'){
+      lg('i',`📄 Report HTML: ${data.html?.length||0} characters returned`);
+    }
+    if(data.assets)_data=data;
+
+    toast('✅',`${cfg.method} ${cfg.url} → 200 OK (${ms}ms)`);
+  }catch(e){
+    const ms=Math.round(performance.now()-t0);
+    lg('e',`❌ FAILED: ${cfg.method} ${cfg.url} → ${e.message}`);
+    lg('e','   Is server.py running? Try: python server.py');
+    toast('❌','Request failed — is server.py running?');
+  }finally{
+    if(btn){btn.classList.remove('loading');btn.textContent='▶ Fire Request';}
+    if(row)setTimeout(()=>row.classList.remove('active-ep'),1500);
+  }
+}
+
+/* ── display update ── */
+function updateDisplay(d,src){
+  // KPIs
+  setMetric('kpi-crit',d.criticalCVEs);
+  setMetric('kpi-high',d.highNodes);
+  setMetric('kpi-avg', d.avgRiskScore);
+  setMetric('kpi-comp',d.complianceRate+'%');
+
+  // Table
+  const tb=$('assets-body');
+  tb.innerHTML='';
+  (d.assets||[]).forEach(a=>{
+    const sevHtml=`<span class="sev ${a.criticality}">${a.criticality}</span>`;
+    const stCls=a.status==='resolved'?'low':a.status==='in-progress'?'medium':'high';
+    const stHtml=`<span class="sev ${stCls}">${a.status}</span>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--text3)">${a.rank}</td>
+      <td style="color:#fff;font-weight:700">${a.name}</td>
+      <td style="font-family:var(--mono);font-size:11px">${a.ip}</td>
+      <td>${a.type}</td>
+      <td>${sevHtml}</td>
+      <td style="font-weight:800;color:#fff">${a.score}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--blue2)">${a.cve}</td>
+      <td>${stHtml}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function setMetric(id,val){
+  const el=$(id);
+  if(!el)return;
+  const old=el.textContent;
+  el.textContent=val;
+  if(old!==String(val)){
+    const tile=el.closest('.metric');
+    tile.classList.add('pop');
+    setTimeout(()=>tile.classList.remove('pop'),600);
+  }
+}
+
+/* ── auto refresh ── */
+let _ar=null,_arTick=0;
+function startAR(){
+  if(_ar)return;
+  $('ar-indicator').className='active';
+  $('ar-indicator').textContent='● ACTIVE';
+  lg('i','🔄 Auto-refresh started — calling POST /api/refresh every 5 seconds');
+  _ar=setInterval(async()=>{
+    _arTick++;
+    $('ar-indicator').textContent=`● ACTIVE — tick #${_arTick}`;
+    await fire('refresh');
+  },5000);
+}
+function stopAR(){
+  clearInterval(_ar);_ar=null;
+  $('ar-indicator').className='';
+  $('ar-indicator').textContent='● STOPPED';
+  if(_arTick>0)lg('i',`🛑 Auto-refresh stopped after ${_arTick} poll(s).`);
+  _arTick=0;
+}
+
+/* ── nav dots + progress bar ── */
+const slides=document.querySelectorAll('section.slide');
+const dots=document.querySelectorAll('#nav-dots a');
+const pb=$('progress-bar');
+
+function updateNav(){
+  let cur=0;
+  slides.forEach((s,i)=>{
+    const r=s.getBoundingClientRect();
+    if(r.top<window.innerHeight/2)cur=i;
+  });
+  dots.forEach((d,i)=>d.classList.toggle('active',i===cur));
+  const pct=((cur+1)/slides.length)*100;
+  pb.style.width=pct+'%';
+}
+window.addEventListener('scroll',updateNav,{passive:true});
+updateNav();
+
+/* ── init ── */
+window.addEventListener('DOMContentLoaded',async()=>{
+  const online=await checkServer();
+  if(online){
+    await fire('dashboard');
+  }
+});
+</script>
+</body>
+</html>

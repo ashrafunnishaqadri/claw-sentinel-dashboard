@@ -4,7 +4,7 @@ import random
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from datetime import datetime
 
-PORT = 8000
+PORT = int(os.environ.get('PORT', 8000))
 
 # Mock Database / State in Memory
 dashboard_data = {
@@ -325,10 +325,96 @@ class ClawSentinelAPIHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/dashboard':
+            # Full dashboard snapshot (legacy / convenience endpoint)
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(dashboard_data).encode('utf-8'))
+
+        elif self.path == '/api/critical-cves':
+            # KPI: Total count of critical CVE signatures
+            payload = { "criticalCVEs": dashboard_data["criticalCVEs"] }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/high-risk-nodes':
+            # KPI: Count of high-risk nodes across all datacenters
+            payload = { "highNodes": dashboard_data["highNodes"] }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/avg-risk-score':
+            # KPI: Average risk score + sparkline trend points
+            payload = {
+                "avgRiskScore": dashboard_data["avgRiskScore"],
+                "sparklineData": dashboard_data["sparklineData"]
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/open-responses':
+            # KPI: Count of open incident responses
+            payload = { "openResponses": dashboard_data["openResponses"] }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/patch-compliance':
+            # KPI: Patch compliance percentage + 30-day risk trend data
+            payload = {
+                "complianceRate": dashboard_data["complianceRate"],
+                "trendData": dashboard_data["trendData"]
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/risk-distribution':
+            # Chart: Risk score distribution counts by severity band
+            assets = dashboard_data["assets"]
+            critical = len([a for a in assets if a["criticality"] == "critical"]) + 10
+            high     = len([a for a in assets if a["criticality"] == "high"])     + 25
+            medium   = len([a for a in assets if a["criticality"] == "medium"])   + 75
+            low      = max(0, 250 - (critical + high + medium))
+            payload = {
+                "distribution": {
+                    "critical": critical,
+                    "high":     high,
+                    "medium":   medium,
+                    "low":      low
+                },
+                "totalAssets": dashboard_data["totalAssets"]
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/top-cves':
+            # Panel: Top CVEs ranked by risk score
+            payload = { "topCVEs": dashboard_data["topCVEs"] }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/top-risky-assets':
+            # Table: All risky assets sorted by risk score descending
+            sorted_assets = sorted(dashboard_data["assets"], key=lambda a: a["score"], reverse=True)
+            payload = { "assets": sorted_assets }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
         else:
             # Fall back to standard file serving
             super().do_GET()
@@ -434,7 +520,23 @@ def run(server_class=HTTPServer, handler_class=ClawSentinelAPIHandler, port=PORT
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    print(f"ClawSentinel Backend API Server running at http://localhost:{port}...")
+
+    # Print both localhost and LAN IP for easy access from other devices
+    import socket
+    try:
+        lan_ip = socket.gethostbyname(socket.gethostname())
+    except Exception:
+        lan_ip = "unavailable"
+
+    print("=" * 55)
+    print(f"  ClawSentinel API Server RUNNING")
+    print("=" * 55)
+    print(f"  Local:    http://localhost:{port}")
+    print(f"  Network:  http://{lan_ip}:{port}  <-- share this with other devices")
+    print("=" * 55)
+    print("  Press CTRL+C to stop the server")
+    print("=" * 55)
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
