@@ -157,6 +157,9 @@ const localFallbackData = {
 
 // --- REST API Helper Functions ---
 
+// Java Spring Boot backend base URL (default Spring Boot port)
+const JAVA_BACKEND_URL = "http://localhost:8080";
+
 // Helper: fetch a single GET endpoint and return parsed JSON (throws on error)
 async function getEndpoint(path) {
     const response = await fetch(path);
@@ -164,19 +167,73 @@ async function getEndpoint(path) {
     return response.json();
 }
 
-// Fetch dashboard data using 8 dedicated GET endpoints in parallel
+// Try fetching the 5 KPI widget values from the Java Spring Boot backend
+// Endpoint: GET /api/dashboard/summary
+// Returns DashboardSummary { totalAssets, criticalRisks, highRiskNodes,
+//                            averageRiskScore, openResponses, patchCompliancePercent }
+async function fetchKPIsFromJavaBackend() {
+    const response = await fetch(`${JAVA_BACKEND_URL}/api/dashboard/summary`, {
+        signal: AbortSignal.timeout(3000) // 3-second timeout
+    });
+    if (!response.ok) throw new Error(`Java backend returned ${response.status}`);
+    const summary = await response.json();
+
+    // Map Java field names → frontend field names
+    return {
+        criticalCVEs:   summary.criticalRisks,
+        highNodes:      summary.highRiskNodes,
+        avgRiskScore:   summary.averageRiskScore,
+        openResponses:  summary.openResponses,
+        complianceRate: Math.round(summary.patchCompliancePercent),
+        totalAssets:    summary.totalAssets
+    };
+}
+
+// Fetch dashboard data — tries Java backend first, then Python mock, then local fallback
 async function fetchDashboardData() {
+
+    // ─── ATTEMPT 1: Java Spring Boot Backend (KPI widgets) ───
     try {
-        // Fire all 8 GET requests concurrently for maximum speed
+        const kpiData = await fetchKPIsFromJavaBackend();
+
+        console.log("✅ Java backend connected — KPI data loaded from Spring Boot.");
+
+        // Start with local fallback as a base (for charts, assets table, etc.)
+        dashboardData = JSON.parse(JSON.stringify(localFallbackData));
+
+        // Overwrite the 5 KPI values with live data from Java backend
+        dashboardData.criticalCVEs  = kpiData.criticalCVEs;
+        dashboardData.highNodes     = kpiData.highNodes;
+        dashboardData.avgRiskScore  = kpiData.avgRiskScore;
+        dashboardData.openResponses = kpiData.openResponses;
+        dashboardData.complianceRate = kpiData.complianceRate;
+        dashboardData.totalAssets   = kpiData.totalAssets;
+
+        prioritizationCount = dashboardData.prioritizationCount;
+
+        // Update connection status indicator → Connected (Java)
+        if (apiStatusIndicator) {
+            apiStatusIndicator.className = "api-status connected";
+            const textEl = apiStatusIndicator.querySelector(".api-status-text");
+            if (textEl) textEl.textContent = "Java API Connected";
+        }
+        return true;
+
+    } catch (javaErr) {
+        console.warn("Java backend not available, trying Python mock server…", javaErr);
+    }
+
+    // ─── ATTEMPT 2: Python Mock Server (all endpoints) ───
+    try {
         const [
-            criticalCvesData,    // GET /api/critical-cves
-            highNodesData,       // GET /api/high-risk-nodes
-            avgRiskData,         // GET /api/avg-risk-score
-            openResponsesData,   // GET /api/open-responses
-            complianceData,      // GET /api/patch-compliance
-            distributionData,    // GET /api/risk-distribution
-            topCvesData,         // GET /api/top-cves
-            topAssetsData        // GET /api/top-risky-assets
+            criticalCvesData,
+            highNodesData,
+            avgRiskData,
+            openResponsesData,
+            complianceData,
+            distributionData,
+            topCvesData,
+            topAssetsData
         ] = await Promise.all([
             getEndpoint('/api/critical-cves'),
             getEndpoint('/api/high-risk-nodes'),
@@ -188,11 +245,7 @@ async function fetchDashboardData() {
             getEndpoint('/api/top-risky-assets')
         ]);
 
-        // Assemble all responses into a single dashboardData object so all
-        // existing render functions (updateKPICards, initCharts, etc.) work
-        // unchanged — only the fetch layer is now granular.
         dashboardData = {
-            // KPI cards
             criticalCVEs:        criticalCvesData.criticalCVEs,
             highNodes:           highNodesData.highNodes,
             avgRiskScore:        avgRiskData.avgRiskScore,
@@ -200,44 +253,36 @@ async function fetchDashboardData() {
             openResponses:       openResponsesData.openResponses,
             complianceRate:      complianceData.complianceRate,
             trendData:           complianceData.trendData,
-
-            // Risk distribution chart (pre-computed server-side)
             riskDistribution:    distributionData.distribution,
             totalAssets:         distributionData.totalAssets,
-
-            // CVE panel
             topCVEs:             topCvesData.topCVEs,
-
-            // Risky assets table (server returns sorted by score desc)
             assets:              topAssetsData.assets,
-
-            // Misc state
             prioritizationCount: 3
         };
 
         prioritizationCount = dashboardData.prioritizationCount;
 
-        // Update connection status indicator → Connected
         if (apiStatusIndicator) {
             apiStatusIndicator.className = "api-status connected";
             const textEl = apiStatusIndicator.querySelector(".api-status-text");
-            if (textEl) textEl.textContent = "API Connected";
+            if (textEl) textEl.textContent = "Python API Connected";
         }
         return true;
 
-    } catch (e) {
-        console.warn("One or more REST API endpoints offline. Falling back to local browser mock mode.", e);
-        dashboardData = JSON.parse(JSON.stringify(localFallbackData));
-        prioritizationCount = dashboardData.prioritizationCount;
-
-        // Update connection status indicator → Offline
-        if (apiStatusIndicator) {
-            apiStatusIndicator.className = "api-status offline";
-            const textEl = apiStatusIndicator.querySelector(".api-status-text");
-            if (textEl) textEl.textContent = "API Offline (Mock)";
-        }
-        return false;
+    } catch (pyErr) {
+        console.warn("Python mock server also offline. Using local browser fallback.", pyErr);
     }
+
+    // ─── ATTEMPT 3: Local Hardcoded Fallback ───
+    dashboardData = JSON.parse(JSON.stringify(localFallbackData));
+    prioritizationCount = dashboardData.prioritizationCount;
+
+    if (apiStatusIndicator) {
+        apiStatusIndicator.className = "api-status offline";
+        const textEl = apiStatusIndicator.querySelector(".api-status-text");
+        if (textEl) textEl.textContent = "API Offline (Mock)";
+    }
+    return false;
 }
 
 // --- DOM References ---
