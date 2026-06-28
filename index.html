@@ -33,8 +33,26 @@
             <a href="#" class="nav-item active">
                 <i data-lucide="shield-check"></i>
                 <span>Risk Prioritization</span>
-                <span class="badge" id="sidebar-alert-badge">3</span>
+                <span class="badge" id="sidebar-alert-badge">12</span>
             </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="brain"></i>
+                <span>OpenClaw Decisions</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="list-todo"></i>
+                <span>Response Queue</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="cpu"></i>
+                <span>AI Fabric Health</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i data-lucide="search"></i>
+                <span>Asset Explorer</span>
+            </a>
+
+            <div class="nav-group-title">Intelligence</div>
             <a href="#" class="nav-item">
                 <i data-lucide="search"></i>
                 <span>Vulnerability Explorer</span>
@@ -47,71 +65,31 @@
                 <i data-lucide="award"></i>
                 <span>Compliance</span>
             </a>
-
-            <div class="nav-group-title">Inventory</div>
-            <a href="#" class="nav-item">
-                <i data-lucide="database"></i>
-                <span>Data Centers</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i data-lucide="cpu"></i>
-                <span>Assets</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i data-lucide="server"></i>
-                <span>GPU Clusters</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i data-lucide="git-branch"></i>
-                <span>Network Topology</span>
-            </a>
-
-            <div class="nav-group-title">Analytics</div>
-            <a href="#" class="nav-item">
-                <i data-lucide="bar-chart-3"></i>
-                <span>Risk Analytics</span>
-            </a>
             <a href="#" class="nav-item">
                 <i data-lucide="eye"></i>
                 <span>Exposure Analysis</span>
             </a>
-            <a href="#" class="nav-item">
-                <i data-lucide="trending-up"></i>
-                <span>Trends & Reports</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i data-lucide="shield-alert"></i>
-                <span>MITRE ATT&CK</span>
-            </a>
 
-            <div class="nav-group-title">Response</div>
-            <a href="#" class="nav-item">
-                <i data-lucide="list-todo"></i>
-                <span>Response Queue</span>
-            </a>
+            <div class="nav-group-title">Operations</div>
             <a href="#" class="nav-item">
                 <i data-lucide="terminal"></i>
-                <span>Automations</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i data-lucide="play-circle"></i>
-                <span>Playbooks</span>
+                <span>Automation & Playbooks</span>
             </a>
             <a href="#" class="nav-item">
                 <i data-lucide="file-up"></i>
                 <span>Patch Management</span>
             </a>
-
-            <div class="nav-group-title">Configuration</div>
             <a href="#" class="nav-item">
                 <i data-lucide="settings"></i>
                 <span>Policies</span>
             </a>
+
+            <div class="nav-group-title">Configuration</div>
             <a href="#" class="nav-item">
                 <i data-lucide="blocks"></i>
                 <span>Integrations</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" id="nav-settings">
                 <i data-lucide="sliders"></i>
                 <span>Settings</span>
             </a>
@@ -123,7 +101,9 @@
                 <h4>System Health</h4>
                 <p>All Systems Operational</p>
             </div>
+            <span style="margin-left:auto; color: rgba(255,255,255,0.4); font-size: 10px;">&#9654;</span>
         </div>
+        <div style="padding: 8px 16px; font-size: 10px; color: rgba(255,255,255,0.35);">Last updated: 2 mins ago</div>
     </aside>
 
     <!-- Main Workspace -->
@@ -132,7 +112,7 @@
         <header>
             <div class="breadcrumb-area">
                 <div class="breadcrumbs">
-                    <a href="#">Data Centers</a>
+                    <a href="#">Home</a>
                     <span id="breadcrumb-current">Risk Prioritization</span>
                 </div>
                 <h2>Risk Prioritization & Response</h2>
@@ -144,7 +124,7 @@
                 </button>
 
                 <select class="header-dropdown" id="datacenter-select" title="Select Data Center">
-                    <option value="all">All Data Centers</option>
+                    <option value="all">All Datacenters</option>
                     <option value="dc-east">DC-East</option>
                     <option value="dc-west">DC-West</option>
                 </select>
@@ -195,21 +175,21 @@
 
         <!-- KPI Grid -->
         <section class="kpi-grid">
-            <!-- Critical CVEs -->
+            <!-- Critical AI Risks -->
             <div class="card critical">
                 <div class="kpi-header">
-                    <span>Critical CVEs</span>
+                    <span>Critical AI Risks</span>
                     <div class="kpi-icon">
                         <i data-lucide="shield-alert"></i>
                     </div>
                 </div>
                 <div class="kpi-body">
-                    <span class="kpi-value" id="kpi-critical-cves">15</span>
+                    <span class="kpi-value" id="kpi-critical-cves">12</span>
                 </div>
                 <p class="kpi-subtitle">Unmitigated risks</p>
                 <div class="kpi-trend up">
                     <i data-lucide="trending-up"></i>
-                    <span>+ 25% vs last 30d</span>
+                    <span>↑ 33% vs last 30d</span>
                 </div>
             </div>
 
@@ -222,48 +202,48 @@
                     </div>
                 </div>
                 <div class="kpi-body">
-                    <span class="kpi-value" id="kpi-high-nodes">24</span>
+                    <span class="kpi-value" id="kpi-high-nodes">18</span>
                 </div>
-                <p class="kpi-subtitle">Exposed server elements</p>
+                <p class="kpi-subtitle">Exposed compute nodes</p>
                 <div class="kpi-trend up">
                     <i data-lucide="trending-up"></i>
-                    <span>+ 18% vs last 30d</span>
+                    <span>↑ 28% vs last 30d</span>
                 </div>
             </div>
 
-            <!-- Average Risk Score -->
+            <!-- AI Infra Risk Score -->
             <div class="card medium">
                 <div class="kpi-header">
-                    <span>Average Risk Score</span>
+                    <span>AI Infra Risk Score</span>
                     <div class="kpi-sparkline">
                         <canvas id="avg-risk-sparkline"></canvas>
                     </div>
                 </div>
                 <div class="kpi-body">
-                    <span class="kpi-value" id="kpi-avg-score">6.4</span>
+                    <span class="kpi-value" id="kpi-avg-score">7.8</span>
                 </div>
                 <p class="kpi-subtitle">Across all assets</p>
                 <div class="kpi-trend neutral">
                     <i data-lucide="trending-up"></i>
-                    <span>+ 0.2 vs last 30d</span>
+                    <span>↑ 0.6 vs last 30d</span>
                 </div>
             </div>
 
-            <!-- Open Responses -->
+            <!-- Active Remediations -->
             <div class="card primary">
                 <div class="kpi-header">
-                    <span>Open Responses</span>
+                    <span>Active Remediations</span>
                     <div class="kpi-icon" style="background-color: var(--primary-light); color: var(--primary);">
                         <i data-lucide="clipboard-list"></i>
                     </div>
                 </div>
                 <div class="kpi-body">
-                    <span class="kpi-value" id="kpi-open-responses">8</span>
+                    <span class="kpi-value" id="kpi-open-responses">5</span>
                 </div>
                 <p class="kpi-subtitle">Require action</p>
                 <div class="kpi-trend down">
                     <i data-lucide="trending-down"></i>
-                    <span>- 12% vs last 30d</span>
+                    <span>↓ 17% vs last 30d</span>
                 </div>
             </div>
 
@@ -276,26 +256,26 @@
                             <circle class="progress-circle-bg" cx="24" cy="24" r="20" />
                             <circle class="progress-circle-bar" id="compliance-circle-bar" cx="24" cy="24" r="20" />
                         </svg>
-                        <div class="progress-circle-text" id="kpi-compliance-val">82%</div>
+                        <div class="progress-circle-text" id="kpi-compliance-val">78%</div>
                     </div>
                 </div>
                 <div class="kpi-body">
-                    <span class="kpi-value" id="kpi-compliance-subtitle">82%</span>
+                    <span class="kpi-value" id="kpi-compliance-subtitle">78%</span>
                 </div>
                 <p class="kpi-subtitle">Below target (90%)</p>
                 <div class="kpi-trend down">
                     <i data-lucide="trending-up"></i>
-                    <span>+ 5% vs last 30d</span>
+                    <span>↑ 9% vs last 30d</span>
                 </div>
             </div>
         </section>
 
-        <!-- Charts Mid Section -->
+        <!-- Charts Mid Section (Row 1: Distribution, Trend, AI Fabric Health) -->
         <section class="mid-grid">
             <!-- Doughnut Chart: Risk Score Distribution -->
             <div class="card chart-card">
                 <div class="chart-card-header">
-                    <h3>Risk Score Distribution</h3>
+                    <h3>Risk Score Distribution <i data-lucide="info" style="width:14px;height:14px;color:var(--text-secondary);vertical-align:middle;"></i></h3>
                 </div>
                 <div class="chart-container">
                     <canvas id="risk-distribution-chart"></canvas>
@@ -305,7 +285,7 @@
                     </div>
                 </div>
                 <div class="doughnut-legend-container" id="chart-legend">
-                    <!-- Loaded dynamically via JavaScript for precise synchronization -->
+                    <!-- Loaded dynamically via JavaScript -->
                 </div>
                 <a href="#" class="chart-footer-link">
                     <span>View Risk Analytics</span>
@@ -327,14 +307,190 @@
                 </a>
             </div>
 
-            <!-- Top CVEs By Risk Score -->
+            <!-- AI Fabric Health Widget (NEW) -->
             <div class="card chart-card">
                 <div class="chart-card-header">
-                    <h3>Top CVEs by Risk Score</h3>
+                    <h3>AI Fabric Health <i data-lucide="cpu" style="width:14px;height:14px;color:var(--text-secondary);vertical-align:middle;"></i></h3>
                 </div>
-                <div class="top-cves-list" id="top-cves-list">
-                    <!-- Populated dynamically via JS -->
+                <div class="fabric-health-list">
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="radio"></i>
+                            <span>RDMA Congestion</span>
+                        </div>
+                        <span class="fabric-metric-value">0.62</span>
+                        <span class="fabric-status-badge high">High</span>
+                    </div>
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="arrow-down-circle"></i>
+                            <span>Packet Drops</span>
+                        </div>
+                        <span class="fabric-metric-value">0.41%</span>
+                        <span class="fabric-status-badge high">High</span>
+                    </div>
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="alert-triangle"></i>
+                            <span>Fabric Errors</span>
+                        </div>
+                        <span class="fabric-metric-value">108</span>
+                        <span class="fabric-status-badge medium">Medium</span>
+                    </div>
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="link"></i>
+                            <span>Link Utilization</span>
+                        </div>
+                        <span class="fabric-metric-value">67%</span>
+                        <span class="fabric-status-badge healthy">Healthy</span>
+                    </div>
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="cpu"></i>
+                            <span>GPU Utilization</span>
+                        </div>
+                        <span class="fabric-metric-value">81%</span>
+                        <span class="fabric-status-badge healthy">Healthy</span>
+                    </div>
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="brain"></i>
+                            <span>Training Jobs</span>
+                        </div>
+                        <span class="fabric-metric-value">14</span>
+                        <span class="fabric-status-badge info">Info</span>
+                    </div>
+                    <div class="fabric-metric-row">
+                        <div class="fabric-metric-left">
+                            <i data-lucide="zap"></i>
+                            <span>Inference Jobs</span>
+                        </div>
+                        <span class="fabric-metric-value">37</span>
+                        <span class="fabric-status-badge info">Info</span>
+                    </div>
                 </div>
+                <a href="#" class="chart-footer-link" style="margin-top: auto;">
+                    <span>View AI Fabric Dashboard</span>
+                    <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- Activity Grid (Row 2: OpenClaw Activity, Risk Reduction, Top CVEs) -->
+        <section class="activity-grid">
+            <!-- OpenClaw Activity (Last 24H) -->
+            <div class="card chart-card">
+                <div class="chart-card-header">
+                    <h3>OpenClaw Activity (Last 24H) <i data-lucide="activity" style="width:14px;height:14px;color:var(--text-secondary);vertical-align:middle;"></i></h3>
+                </div>
+                <div class="activity-timeline">
+                    <div class="activity-event">
+                        <span class="activity-time">14:32</span>
+                        <div class="activity-dot green"></div>
+                        <div class="activity-details">
+                            <span class="activity-asset-name">GPU-59</span>
+                            <span class="activity-description">Patch Recommended</span>
+                        </div>
+                        <span class="activity-status-badge completed">Completed</span>
+                    </div>
+                    <div class="activity-event">
+                        <span class="activity-time">14:34</span>
+                        <div class="activity-dot orange"></div>
+                        <div class="activity-details">
+                            <span class="activity-asset-name">Storage-12</span>
+                            <span class="activity-description">Collect Forensics</span>
+                        </div>
+                        <span class="activity-status-badge in-progress">In Progress</span>
+                    </div>
+                    <div class="activity-event">
+                        <span class="activity-time">14:36</span>
+                        <div class="activity-dot green"></div>
+                        <div class="activity-details">
+                            <span class="activity-asset-name">GPU-88</span>
+                            <span class="activity-description">Traffic Rerouted</span>
+                        </div>
+                        <span class="activity-status-badge completed">Completed</span>
+                    </div>
+                    <div class="activity-event">
+                        <span class="activity-time">14:37</span>
+                        <div class="activity-dot green"></div>
+                        <div class="activity-details">
+                            <span class="activity-asset-name">CPU-16</span>
+                            <span class="activity-description">Ports Restricted</span>
+                        </div>
+                        <span class="activity-status-badge completed">Completed</span>
+                    </div>
+                    <div class="activity-event">
+                        <span class="activity-time">14:39</span>
+                        <div class="activity-dot orange"></div>
+                        <div class="activity-details">
+                            <span class="activity-asset-name">GPU-21</span>
+                            <span class="activity-description">Live patch applied</span>
+                        </div>
+                        <span class="activity-status-badge in-progress">In Progress</span>
+                    </div>
+                </div>
+                <a href="#" class="chart-footer-link" style="margin-top: auto;">
+                    <span>View All Activity</span>
+                    <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+
+            <!-- Today's Risk Reduction -->
+            <div class="card chart-card">
+                <div class="chart-card-header">
+                    <h3>Today's Risk Reduction <i data-lucide="trending-down" style="width:14px;height:14px;color:var(--text-secondary);vertical-align:middle;"></i></h3>
+                </div>
+                <div class="risk-reduction-content">
+                    <div class="risk-score-display">
+                        <div class="risk-score-item">
+                            <span class="risk-score-label">Initial Risk Score</span>
+                            <span class="risk-score-number initial">9.4</span>
+                            <div class="risk-score-bar">
+                                <div class="risk-score-bar-fill critical" style="width: 94%;"></div>
+                            </div>
+                        </div>
+                        <div class="risk-score-item">
+                            <span class="risk-score-label">Current Risk Score:</span>
+                            <span class="risk-score-number current">3.0</span>
+                            <div class="risk-score-bar">
+                                <div class="risk-score-bar-fill good" style="width: 30%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="risk-reduction-chart-container">
+                        <canvas id="risk-reduction-chart"></canvas>
+                    </div>
+                    <div class="risk-reduction-bottom">
+                        <span class="risk-reduction-percentage">68%</span>
+                        <span class="risk-reduction-label">Risk Reduction<br>vs start of day</span>
+                    </div>
+                </div>
+                <a href="#" class="chart-footer-link" style="margin-top: auto;">
+                    <span>View Risk Reduction Report</span>
+                    <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+
+            <!-- Top CVEs By Risk Score (Table Format) -->
+            <div class="card chart-card">
+                <div class="chart-card-header">
+                    <h3>Top CVEs by Risk Score <i data-lucide="shield-alert" style="width:14px;height:14px;color:var(--text-secondary);vertical-align:middle;"></i></h3>
+                </div>
+                <table class="top-cves-table">
+                    <thead>
+                        <tr>
+                            <th>CVE ID</th>
+                            <th>CVSS</th>
+                            <th>Affected Assets</th>
+                            <th>Risk Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-cves-table-body">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
                 <a href="#" class="chart-footer-link" style="margin-top: auto;">
                     <span>View Vulnerability Explorer</span>
                     <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
@@ -342,10 +498,10 @@
             </div>
         </section>
 
-        <!-- Bottom Table: Top Risky Assets -->
+        <!-- Bottom Table: Top Risk Assets -->
         <section class="card assets-section">
             <div class="chart-card-header" style="border-bottom: none; margin-bottom: 0;">
-                <h3>Top Risky Assets</h3>
+                <h3>Top Risk Assets <i data-lucide="shield" style="width:14px;height:14px;color:var(--text-secondary);vertical-align:middle;"></i></h3>
                 <div class="assets-header-actions">
                     <div class="search-box">
                         <i data-lucide="search"></i>
@@ -377,6 +533,7 @@
                             <th>Rank</th>
                             <th>Asset Name</th>
                             <th>Type</th>
+                            <th>Workload</th>
                             <th>Data Center</th>
                             <th>Criticality</th>
                             <th>Risk Score</th>
@@ -474,6 +631,25 @@
                     <button class="drawer-action-btn" id="btn-report-print" style="flex: 2; margin-top: 0;">Print / Save as PDF</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal-overlay"></div>
+    <div class="report-modal" id="settings-modal">
+        <div class="modal-header">
+            <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="sliders" style="width:18px;height:18px;color:var(--primary);"></i>Configuration Settings</h3>
+            <button class="modal-close" id="settings-modal-close" title="Close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body" id="settings-modal-body">
+            <div class="form-group">
+                <label for="backend-url-input">Backend API URL</label>
+                <input type="text" id="backend-url-input" class="header-dropdown" style="width: 100%; margin-top: 6px; padding: 8px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" placeholder="http://localhost:8080">
+                <p style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">Enter the URL for your office backend (e.g., http://192.168.1.100:8080).</p>
+            </div>
+            <button class="drawer-action-btn" id="btn-save-settings" style="width:100%; margin-top: 24px;">
+                Save & Reconnect
+            </button>
         </div>
     </div>
 

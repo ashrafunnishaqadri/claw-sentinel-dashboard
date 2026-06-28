@@ -11,44 +11,41 @@ const apiStatusIndicator = document.getElementById("api-status-indicator");
 
 // --- Fallback Mock Data ---
 const localFallbackData = {
-    criticalCVEs: 15,
-    highNodes: 24,
-    avgRiskScore: 6.4,
-    openResponses: 8,
-    complianceRate: 82, // Percent
-    totalAssets: 250,
+    criticalCVEs: 12,
+    highNodes: 18,
+    avgRiskScore: 7.8,
+    openResponses: 5,
+    complianceRate: 78,
+    totalAssets: 200,
     
-    // CVE list
     topCVEs: [
-        { id: "CVE-2024-1102", cvss: 9.8, affected: 6, riskScore: 9.8, criticality: "critical" },
-        { id: "CVE-2024-9122", cvss: 8.8, affected: 15, riskScore: 8.8, criticality: "high" },
-        { id: "CVE-2024-5561", cvss: 8.4, affected: 9, riskScore: 8.4, criticality: "high" },
-        { id: "CVE-2024-2313", cvss: 8.2, affected: 4, riskScore: 8.2, criticality: "high" },
-        { id: "CVE-2024-0012", cvss: 7.6, affected: 11, riskScore: 7.6, criticality: "medium" }
+        { id: "CVE-2024-758", cvss: 9.4, affected: 8, riskScore: 9.4, criticality: "critical" },
+        { id: "CVE-2024-555", cvss: 9.1, affected: 12, riskScore: 9.1, criticality: "critical" },
+        { id: "CVE-2024-3371", cvss: 8.8, affected: 6, riskScore: 8.8, criticality: "high" },
+        { id: "CVE-2024-2313", cvss: 8.6, affected: 9, riskScore: 8.6, criticality: "high" },
+        { id: "CVE-2024-1223", cvss: 8.2, affected: 14, riskScore: 8.2, criticality: "high" }
     ],
 
-    // Risk Trend points (last 30 days - 10 values)
     trendData: {
-        labels: ["May 1", "May 4", "May 7", "May 10", "May 13", "May 16", "May 19", "May 22", "May 25", "May 28"],
-        values: [5.2, 5.8, 6.1, 5.9, 6.3, 6.7, 6.4, 6.8, 6.2, 6.4]
+        labels: ["Apr 27", "May 4", "May 11", "May 16", "May 25"],
+        values: [5.0, 4.5, 6.0, 7.5, 8.0]
     },
 
-    // Sparkline points for average risk score card (last 7 points)
-    sparklineData: [5.8, 6.0, 5.9, 6.2, 6.3, 6.2, 6.4],
+    sparklineData: [6.5, 7.0, 7.2, 7.0, 7.5, 7.6, 7.8],
 
-    // Top Risky Assets Array
     assets: [
         { 
             rank: 1, 
-            name: "GPU-88", 
-            ip: "10.10.12.88", 
+            name: "GPU-59", 
+            ip: "10.10.12.59", 
             type: "GPU Node", 
+            workload: "LLM Training",
             dc: "dc-east", 
             criticality: "critical", 
-            score: 9.6, 
-            cve: "CVE-2024-1102", 
+            score: 9.4, 
+            cve: "CVE-2024-758", 
             status: "open", 
-            lastSeen: "1m ago",
+            lastSeen: "2m ago",
             os: "Ubuntu 22.04 LTS",
             rack: "Rack E-04",
             gpuInfo: "8x NVIDIA H100 80GB SXM5",
@@ -56,109 +53,80 @@ const localFallbackData = {
         },
         { 
             rank: 2, 
-            name: "GPU-12", 
-            ip: "10.10.12.12", 
+            name: "GPU-21", 
+            ip: "10.10.12.21", 
             type: "GPU Node", 
+            workload: "Inference Service",
             dc: "dc-east", 
-            criticality: "high", 
+            criticality: "critical", 
             score: 8.8, 
-            cve: "CVE-2024-9122", 
+            cve: "CVE-2024-555", 
             status: "open", 
             lastSeen: "3m ago",
             os: "RedHat Enterprise Linux 9",
             rack: "Rack E-12",
             gpuInfo: "8x NVIDIA A100 80GB PCIe",
-            details: "Unauthenticated API command execution on BMC controller. Out of compliance with policy SEC-GPU-02."
+            details: "Unauthenticated API command execution on BMC controller."
         },
         { 
             rank: 3, 
-            name: "GPU-45", 
-            ip: "10.10.12.45", 
+            name: "GPU-88", 
+            ip: "10.10.12.88", 
             type: "GPU Node", 
+            workload: "LLM Training",
             dc: "dc-west", 
             criticality: "high", 
-            score: 8.4, 
-            cve: "CVE-2024-5561", 
+            score: 8.5, 
+            cve: "CVE-2024-3371", 
             status: "in-progress", 
             lastSeen: "5m ago",
             os: "Ubuntu 22.04 LTS",
             rack: "Rack W-09",
             gpuInfo: "4x NVIDIA H100 80GB PCIe",
-            details: "Local privilege escalation vulnerability via Linux kernel subsystem. Mitigation script running."
+            details: "Local privilege escalation vulnerability via Linux kernel subsystem."
         },
         { 
             rank: 4, 
-            name: "DPU-03", 
-            ip: "10.10.12.7", 
-            type: "DPU Node", 
+            name: "DPU-07", 
+            ip: "10.10.22.7", 
+            type: "DPU", 
+            workload: "Network Fabric",
             dc: "dc-east", 
-            criticality: "high", 
-            score: 8.2, 
+            criticality: "critical", 
+            score: 8.1, 
             cve: "CVE-2024-2313", 
             status: "open", 
-            lastSeen: "6m ago",
+            lastSeen: "7m ago",
             os: "NVIDIA BlueField OS",
             rack: "Rack E-01",
             gpuInfo: "NVIDIA BlueField-3 DPU",
-            details: "Critical vulnerability inside network packet parser. Risk of DDoS injection and system crash."
+            details: "Critical vulnerability inside network packet parser."
         },
         { 
             rank: 5, 
-            name: "GPU-77", 
-            ip: "10.10.12.77", 
-            type: "GPU Node", 
+            name: "Storage-12", 
+            ip: "10.10.15.12", 
+            type: "Storage Node", 
+            workload: "Checkpoint Storage",
             dc: "dc-west", 
-            criticality: "medium", 
-            score: 7.6, 
-            cve: "CVE-2024-0012", 
+            criticality: "high", 
+            score: 7.9, 
+            cve: "CVE-2024-1223", 
             status: "open", 
-            lastSeen: "8m ago",
-            os: "Ubuntu 20.04 LTS",
-            rack: "Rack W-04",
-            gpuInfo: "8x NVIDIA H100 80GB SXM5",
-            details: "Medium exposure from outdated software library in training containers. Active exposure detected."
-        },
-        { 
-            rank: 6, 
-            name: "VM-Storage-01", 
-            ip: "10.10.10.15", 
-            type: "Storage VM", 
-            dc: "dc-west", 
-            criticality: "medium", 
-            score: 6.9, 
-            cve: "CVE-2024-3882", 
-            status: "resolved", 
-            lastSeen: "12m ago",
+            lastSeen: "9m ago",
             os: "Ubuntu 22.04 LTS",
             rack: "Rack W-11",
             gpuInfo: "N/A (NVMe Storage Tier)",
-            details: "Container escape vulnerability. Remediated via cluster kernel upgrade. Active monitoring enabled."
-        },
-        { 
-            rank: 7, 
-            name: "K8s-Worker-14", 
-            ip: "10.20.15.14", 
-            type: "K8s Node", 
-            dc: "dc-east", 
-            criticality: "low", 
-            score: 4.2, 
-            cve: "CVE-2024-4421", 
-            status: "resolved", 
-            lastSeen: "1h ago",
-            os: "Ubuntu 22.04 LTS",
-            rack: "Rack E-08",
-            gpuInfo: "1x NVIDIA L40S 48GB",
-            details: "Low severity container dependency vulnerability. Patched dependency tree. Integrity verified."
+            details: "Container escape vulnerability on storage cluster."
         }
     ],
-    complianceRate: 82,
     prioritizationCount: 3
 };
 
 // --- REST API Helper Functions ---
 
 // Java Spring Boot backend base URL (default Spring Boot port)
-const JAVA_BACKEND_URL = "http://localhost:8080";
+let JAVA_BACKEND_URL = localStorage.getItem('backendUrl') || "http://localhost:8080";
 
 // Helper: fetch a single GET endpoint and return parsed JSON (throws on error)
 async function getEndpoint(path) {
@@ -235,14 +203,14 @@ async function fetchDashboardData() {
             topCvesData,
             topAssetsData
         ] = await Promise.all([
-            getEndpoint('/api/critical-cves'),
-            getEndpoint('/api/high-risk-nodes'),
-            getEndpoint('/api/avg-risk-score'),
-            getEndpoint('/api/open-responses'),
-            getEndpoint('/api/patch-compliance'),
-            getEndpoint('/api/risk-distribution'),
-            getEndpoint('/api/top-cves'),
-            getEndpoint('/api/top-risky-assets')
+            getEndpoint(`${JAVA_BACKEND_URL}/api/critical-cves`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/high-risk-nodes`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/avg-risk-score`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/open-responses`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/patch-compliance`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/risk-distribution`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/top-cves`),
+            getEndpoint(`${JAVA_BACKEND_URL}/api/top-risky-assets`)
         ]);
 
         dashboardData = {
@@ -301,6 +269,14 @@ const detailsDrawer = document.getElementById("details-drawer");
 const drawerOverlay = document.getElementById("drawer-overlay");
 const drawerClose = document.getElementById("drawer-close");
 const drawerContent = document.getElementById("drawer-content");
+
+// Settings Modal DOM references
+const navSettings = document.getElementById("nav-settings");
+const settingsModal = document.getElementById("settings-modal");
+const settingsModalOverlay = document.getElementById("settings-modal-overlay");
+const settingsModalClose = document.getElementById("settings-modal-close");
+const backendUrlInput = document.getElementById("backend-url-input");
+const btnSaveSettings = document.getElementById("btn-save-settings");
 
 // Alert Count Controller DOM references
 const headerAlertCount = document.getElementById("header-alert-count");
@@ -370,9 +346,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Chart.js main elements initialization error:", e);
     }
 
+    // 7b. Initialize Risk Reduction Chart
+    try {
+        initRiskReductionChart();
+    } catch (e) {
+        console.error("Risk Reduction chart render error:", e);
+    }
+
+    // 7c. Render Top CVEs Table
+    try {
+        renderTopCVEsTable();
+    } catch (e) {
+        console.error("Top CVEs table render error:", e);
+    }
+
     // 8. Setup Interactivity Event Listeners
     try {
         setupEventListeners();
+        setupSettingsModal();
     } catch (e) {
         console.error("Event listeners attachment error:", e);
     }
@@ -387,8 +378,54 @@ function updateKPICards() {
         document.getElementById("kpi-open-responses").textContent = dashboardData.openResponses;
         document.getElementById("kpi-compliance-val").textContent = `${dashboardData.complianceRate}%`;
         document.getElementById("kpi-compliance-subtitle").textContent = `${dashboardData.complianceRate}%`;
+        document.getElementById("doughnut-center-total").textContent = dashboardData.totalAssets;
     } catch (e) {
         console.error("KPI cards populating error:", e);
+    }
+}
+
+// --- Settings Modal Functions ---
+function setupSettingsModal() {
+    if (navSettings) {
+        navSettings.addEventListener("click", (e) => {
+            e.preventDefault();
+            backendUrlInput.value = JAVA_BACKEND_URL;
+            settingsModal.classList.add("open");
+            settingsModalOverlay.classList.add("open");
+        });
+    }
+
+    const closeSettings = () => {
+        settingsModal.classList.remove("open");
+        settingsModalOverlay.classList.remove("open");
+    };
+
+    if (settingsModalClose) settingsModalClose.addEventListener("click", closeSettings);
+    if (settingsModalOverlay) settingsModalOverlay.addEventListener("click", closeSettings);
+
+    if (btnSaveSettings) {
+        btnSaveSettings.addEventListener("click", async () => {
+            let newUrl = backendUrlInput.value.trim();
+            if (newUrl && !newUrl.startsWith("http")) {
+                newUrl = "http://" + newUrl;
+            }
+            JAVA_BACKEND_URL = newUrl || "http://localhost:8080";
+            localStorage.setItem('backendUrl', JAVA_BACKEND_URL);
+            
+            // Show loading state on button
+            const originalText = btnSaveSettings.textContent;
+            btnSaveSettings.textContent = "Reconnecting...";
+            btnSaveSettings.disabled = true;
+            
+            await fetchDashboardData();
+            updateKPICards();
+            renderTopCVEList(dashboardData.topCVEs);
+            renderAssetsTable();
+            
+            btnSaveSettings.textContent = originalText;
+            btnSaveSettings.disabled = false;
+            closeSettings();
+        });
     }
 }
 
@@ -431,7 +468,7 @@ async function updateAlertCount(newCount) {
     updateAlertCountUI(clampedCount);
     
     try {
-        const response = await fetch('/api/prioritization-count', {
+        const response = await fetch(`${JAVA_BACKEND_URL}/api/prioritization-count`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ count: clampedCount })
@@ -552,6 +589,7 @@ function renderAssetsTable() {
                 </div>
             </td>
             <td>${asset.type}</td>
+            <td><span class="workload-badge"><i data-lucide="${asset.workload && asset.workload.includes('Training') ? 'brain' : asset.workload && asset.workload.includes('Inference') ? 'cpu' : asset.workload && asset.workload.includes('Network') ? 'network' : asset.workload && asset.workload.includes('Checkpoint') ? 'hard-drive' : 'box'}" style="width:14px;height:14px;"></i> ${asset.workload || 'N/A'}</span></td>
             <td>${asset.dc === 'dc-east' ? 'DC-East' : 'DC-West'}</td>
             <td>
                 <span class="badge-severity ${asset.criticality}">${asset.criticality.toUpperCase()}</span>
@@ -570,7 +608,7 @@ function renderAssetsTable() {
             </td>
             <td style="color: var(--text-secondary); font-size: 12px;">${asset.lastSeen}</td>
             <td style="display: flex; align-items: center; gap: 8px;">
-                <button class="btn-investigate" onclick="openAssetDrawer(${asset.rank})">Investigate</button>
+                <button class="btn-investigate" onclick="openAssetDrawer(${asset.rank})">${asset.status === 'in-progress' ? 'View' : 'Investigate'}</button>
                 <button class="table-menu-btn" title="More options"><i data-lucide="more-vertical" style="width:16px;height:16px;"></i></button>
             </td>
         `;
@@ -670,7 +708,7 @@ function closeDrawer() {
 // Action Trigger Playbook Alert
 window.executeMitigationPlaybook = async function(assetName, cve) {
     try {
-        const response = await fetch('/api/mitigate', {
+        const response = await fetch(`${JAVA_BACKEND_URL}/api/mitigate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ assetName, cve })
@@ -886,6 +924,14 @@ function updateChartsTheme() {
         riskDistChart.options.datasets[0].borderWidth = isDarkMode ? 2 : 1;
         riskDistChart.update();
     }
+
+    if (riskReductionChart) {
+        riskReductionChart.options.scales.x.grid.color = gridColor;
+        riskReductionChart.options.scales.x.ticks.color = fontColor;
+        riskReductionChart.options.scales.y.grid.color = gridColor;
+        riskReductionChart.options.scales.y.ticks.color = fontColor;
+        riskReductionChart.update();
+    }
 }
 
 // --- Event Listeners ---
@@ -931,7 +977,7 @@ function setupEventListeners() {
         refreshAssetsBtn.classList.add("spinning");
         
         try {
-            const response = await fetch('/api/refresh', { method: 'POST' });
+            const response = await fetch(`${JAVA_BACKEND_URL}/api/refresh`, { method: 'POST' });
             if (!response.ok) throw new Error("HTTP error: " + response.status);
             
             dashboardData = await response.json();
@@ -1091,7 +1137,7 @@ async function generateReport() {
 
     let reportHTML = "";
     try {
-        const response = await fetch('/api/generate-report', {
+        const response = await fetch(`${JAVA_BACKEND_URL}/api/generate-report`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, scope, incKpi, incCharts, incTable })
@@ -1291,3 +1337,83 @@ function buildReportHTML(type, scope, incKpi, incCharts, incTable) {
 
     return html;
 }
+
+// --- Risk Reduction Mini Chart ---
+let riskReductionChart = null;
+
+function initRiskReductionChart() {
+    const canvas = document.getElementById('risk-reduction-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const fontColor = isDarkMode ? 'hsl(220, 15%, 70%)' : 'hsl(220, 20%, 45%)';
+    const gridColor = isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 100);
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+    riskReductionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['00:00', '04:00', '08:00', '12:00', '16:00', 'Now'],
+            datasets: [{
+                data: [9.4, 8.2, 6.5, 5.0, 3.8, 3.0],
+                borderColor: '#10b981',
+                borderWidth: 2,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: true } },
+            scales: {
+                x: {
+                    grid: { color: gridColor },
+                    ticks: { color: fontColor, font: { family: 'Outfit', size: 9 } }
+                },
+                y: {
+                    min: 0,
+                    max: 10,
+                    grid: { color: gridColor },
+                    ticks: { color: fontColor, font: { family: 'Outfit', size: 9 } }
+                }
+            }
+        }
+    });
+}
+
+// --- Top CVEs Table Rendering ---
+function renderTopCVEsTable() {
+    const container = document.getElementById('top-cves-table-body');
+    if (!container || !dashboardData.topCVEs) return;
+    container.innerHTML = '';
+    dashboardData.topCVEs.forEach(cve => {
+        const tr = document.createElement('tr');
+        let scoreClass = 'high';
+        if (cve.riskScore >= 9.0) scoreClass = 'critical';
+        tr.innerHTML = `
+            <td>${cve.id}</td>
+            <td>${cve.cvss}</td>
+            <td>${cve.affected}</td>
+            <td><span class="cve-score-badge ${scoreClass}">${cve.riskScore}</span></td>
+        `;
+        container.appendChild(tr);
+    });
+}
+
+// --- Compliance Progress Circle Renderer ---
+function renderComplianceProgress(rate) {
+    const circle = document.getElementById("compliance-circle-bar");
+    if (!circle) return;
+    const radius = parseFloat(circle.getAttribute("r")) || 20;
+    const circumference = 2 * Math.PI * radius;
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference - (circumference * rate / 100);
+}
+

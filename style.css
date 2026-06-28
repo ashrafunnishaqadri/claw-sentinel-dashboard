@@ -1432,3 +1432,353 @@ tbody tr:hover {
         box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
     }
 }
+
+/* ============================================
+   NEW WIDGETS - Activity Grid, AI Fabric Health,
+   OpenClaw Activity, Risk Reduction
+   ============================================ */
+
+/* Activity Grid Layout (3-column, same as mid-grid) */
+.activity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+/* AI Fabric Health Widget */
+.fabric-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fabric-metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+}
+
+.fabric-metric-row:last-child {
+    border-bottom: none;
+}
+
+.fabric-metric-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.fabric-metric-left i {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+}
+
+.fabric-metric-value {
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 50px;
+}
+
+.fabric-status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    text-transform: capitalize;
+    min-width: 60px;
+    text-align: center;
+}
+
+.fabric-status-badge.high {
+    background-color: var(--color-critical-bg);
+    color: var(--color-critical);
+}
+
+.fabric-status-badge.medium {
+    background-color: var(--color-medium-bg);
+    color: var(--color-medium);
+}
+
+.fabric-status-badge.healthy {
+    background-color: var(--color-low-bg);
+    color: var(--color-low);
+}
+
+.fabric-status-badge.info {
+    background-color: hsl(220, 90%, 95%);
+    color: hsl(220, 80%, 55%);
+}
+
+body.dark-theme .fabric-status-badge.info {
+    background-color: hsl(220, 50%, 18%);
+    color: hsl(220, 80%, 65%);
+}
+
+/* OpenClaw Activity Timeline Widget */
+.activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activity-event {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.activity-event:last-child {
+    border-bottom: none;
+}
+
+.activity-time {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 38px;
+    padding-top: 2px;
+}
+
+.activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.activity-dot.green {
+    background-color: var(--color-low);
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.activity-dot.orange {
+    background-color: var(--color-high);
+    box-shadow: 0 0 6px rgba(249, 115, 22, 0.4);
+}
+
+.activity-dot.red {
+    background-color: var(--color-critical);
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+
+.activity-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.activity-asset-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.activity-description {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.activity-status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+.activity-status-badge.completed {
+    background-color: var(--color-low-bg);
+    color: var(--color-low);
+}
+
+.activity-status-badge.in-progress {
+    background-color: var(--color-high-bg);
+    color: var(--color-high);
+}
+
+/* Today's Risk Reduction Widget */
+.risk-reduction-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.risk-score-display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.risk-score-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.risk-score-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    min-width: 110px;
+}
+
+.risk-score-number {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.risk-score-number.initial {
+    color: var(--color-critical);
+}
+
+.risk-score-number.current {
+    color: var(--color-low);
+}
+
+.risk-score-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--border-color);
+}
+
+.risk-score-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+.risk-score-bar-fill.critical {
+    background: linear-gradient(90deg, var(--color-critical), hsl(0, 85%, 50%));
+}
+
+.risk-score-bar-fill.good {
+    background: linear-gradient(90deg, var(--color-low), hsl(142, 70%, 55%));
+}
+
+.risk-reduction-chart-container {
+    height: 100px;
+    position: relative;
+}
+
+.risk-reduction-bottom {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.risk-reduction-percentage {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--color-low);
+    line-height: 1;
+}
+
+.risk-reduction-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+/* Top CVEs Table-Style Widget (new format with header row) */
+.top-cves-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.top-cves-table thead th {
+    padding: 8px 10px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.top-cves-table thead th:last-child {
+    text-align: right;
+}
+
+.top-cves-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+.top-cves-table tbody td:first-child {
+    font-weight: 700;
+}
+
+.top-cves-table tbody td:last-child {
+    text-align: right;
+}
+
+.top-cves-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.top-cves-table tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.top-cves-table tbody tr:hover {
+    background-color: var(--primary-light);
+}
+
+/* Workload badge for assets table */
+.workload-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.workload-badge i {
+    width: 14px;
+    height: 14px;
+    color: var(--primary);
+}
+
+/* Responsive overrides for activity grid */
+@media (max-width: 1280px) {
+    .activity-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .activity-grid .card:last-child {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .activity-grid {
+        grid-template-columns: 1fr;
+    }
+    .activity-grid .card:last-child {
+        grid-column: span 1;
+    }
+}
