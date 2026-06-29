@@ -125,73 +125,73 @@ const localFallbackData = {
 
 // --- REST API Helper Functions ---
 
-// Java Spring Boot backend base URL (default Spring Boot port)
-let JAVA_BACKEND_URL = localStorage.getItem('backendUrl') || "http://localhost:8080";
+// Unified Backend URL — determines where ALL API calls go.
+// Priority: 1) User-configured URL saved in localStorage (via Settings modal)
+//           2) Auto-detect from the page's own origin (works when server.py
+//              serves both the static files and API on the same port)
+//           3) Fallback to localhost:8000 (Python server.py default port)
+function detectBackendUrl() {
+    const saved = localStorage.getItem('backendUrl');
+    // Use saved URL if it's a real user-configured value (ignore the old stale
+    // default 'http://localhost:8080' that may have been stored by prior code)
+    if (saved && saved !== 'http://localhost:8080') return saved;
+    // When served by server.py the page origin IS the backend
+    if (window.location.protocol.startsWith('http')) return window.location.origin;
+    // Opened as file:// — fall back to the default Python server port
+    return 'http://localhost:8000';
+}
+let BACKEND_URL = detectBackendUrl();
 
 // Helper: fetch a single GET endpoint and return parsed JSON (throws on error)
 async function getEndpoint(path) {
-    const response = await fetch(path);
+    const response = await fetch(path, {
+        signal: AbortSignal.timeout(5000)
+    });
     if (!response.ok) throw new Error(`GET ${path} failed with status ${response.status}`);
     return response.json();
 }
 
-// Try fetching the 5 KPI widget values from the Java Spring Boot backend
-// Endpoint: GET /api/dashboard/summary
-// Returns DashboardSummary { totalAssets, criticalRisks, highRiskNodes,
-//                            averageRiskScore, openResponses, patchCompliancePercent }
-async function fetchKPIsFromJavaBackend() {
-    const response = await fetch(`${JAVA_BACKEND_URL}/api/dashboard/summary`, {
-        signal: AbortSignal.timeout(3000) // 3-second timeout
-    });
-    if (!response.ok) throw new Error(`Java backend returned ${response.status}`);
-    const summary = await response.json();
-
-    // Map Java field names → frontend field names
-    return {
-        criticalCVEs:   summary.criticalRisks,
-        highNodes:      summary.highRiskNodes,
-        avgRiskScore:   summary.averageRiskScore,
-        openResponses:  summary.openResponses,
-        complianceRate: Math.round(summary.patchCompliancePercent),
-        totalAssets:    summary.totalAssets
-    };
-}
-
-// Fetch dashboard data — tries Java backend first, then Python mock, then local fallback
+// Fetch dashboard data — tries full dashboard endpoint first, then individual
+// endpoints, then local fallback. All attempts use the same BACKEND_URL.
 async function fetchDashboardData() {
 
-    // ─── ATTEMPT 1: Java Spring Boot Backend (KPI widgets) ───
+    console.log(`[ClawSentinel] Connecting to backend at: ${BACKEND_URL}`);
+
+    // ─── ATTEMPT 1: Full Dashboard Endpoint (GET /api/dashboard) ───
+    // server.py exposes this single endpoint that returns ALL data at once.
     try {
-        const kpiData = await fetchKPIsFromJavaBackend();
+        const fullData = await getEndpoint(`${BACKEND_URL}/api/dashboard`);
 
-        console.log("✅ Java backend connected — KPI data loaded from Spring Boot.");
+        console.log("✅ Backend connected — full dashboard data loaded.");
 
-        // Start with local fallback as a base (for charts, assets table, etc.)
-        dashboardData = JSON.parse(JSON.stringify(localFallbackData));
-
-        // Overwrite the 5 KPI values with live data from Java backend
-        dashboardData.criticalCVEs  = kpiData.criticalCVEs;
-        dashboardData.highNodes     = kpiData.highNodes;
-        dashboardData.avgRiskScore  = kpiData.avgRiskScore;
-        dashboardData.openResponses = kpiData.openResponses;
-        dashboardData.complianceRate = kpiData.complianceRate;
-        dashboardData.totalAssets   = kpiData.totalAssets;
+        dashboardData = {
+            criticalCVEs:        fullData.criticalCVEs,
+            highNodes:           fullData.highNodes,
+            avgRiskScore:        fullData.avgRiskScore,
+            sparklineData:       fullData.sparklineData,
+            openResponses:       fullData.openResponses,
+            complianceRate:      fullData.complianceRate,
+            trendData:           fullData.trendData,
+            totalAssets:         fullData.totalAssets,
+            topCVEs:             fullData.topCVEs,
+            assets:              fullData.assets,
+            prioritizationCount: fullData.prioritizationCount || 3
+        };
 
         prioritizationCount = dashboardData.prioritizationCount;
 
-        // Update connection status indicator → Connected (Java)
         if (apiStatusIndicator) {
             apiStatusIndicator.className = "api-status connected";
             const textEl = apiStatusIndicator.querySelector(".api-status-text");
-            if (textEl) textEl.textContent = "Java API Connected";
+            if (textEl) textEl.textContent = "API Connected";
         }
         return true;
 
-    } catch (javaErr) {
-        console.warn("Java backend not available, trying Python mock server…", javaErr);
+    } catch (fullErr) {
+        console.warn("Full dashboard endpoint not available, trying individual endpoints…", fullErr);
     }
 
-    // ─── ATTEMPT 2: Python Mock Server (all endpoints) ───
+    // ─── ATTEMPT 2: Individual API Endpoints ───
     try {
         const [
             criticalCvesData,
@@ -203,14 +203,14 @@ async function fetchDashboardData() {
             topCvesData,
             topAssetsData
         ] = await Promise.all([
-            getEndpoint(`${JAVA_BACKEND_URL}/api/critical-cves`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/high-risk-nodes`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/avg-risk-score`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/open-responses`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/patch-compliance`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/risk-distribution`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/top-cves`),
-            getEndpoint(`${JAVA_BACKEND_URL}/api/top-risky-assets`)
+            getEndpoint(`${BACKEND_URL}/api/critical-cves`),
+            getEndpoint(`${BACKEND_URL}/api/high-risk-nodes`),
+            getEndpoint(`${BACKEND_URL}/api/avg-risk-score`),
+            getEndpoint(`${BACKEND_URL}/api/open-responses`),
+            getEndpoint(`${BACKEND_URL}/api/patch-compliance`),
+            getEndpoint(`${BACKEND_URL}/api/risk-distribution`),
+            getEndpoint(`${BACKEND_URL}/api/top-cves`),
+            getEndpoint(`${BACKEND_URL}/api/top-risky-assets`)
         ]);
 
         dashboardData = {
@@ -230,15 +230,17 @@ async function fetchDashboardData() {
 
         prioritizationCount = dashboardData.prioritizationCount;
 
+        console.log("✅ Backend connected — data loaded from individual endpoints.");
+
         if (apiStatusIndicator) {
             apiStatusIndicator.className = "api-status connected";
             const textEl = apiStatusIndicator.querySelector(".api-status-text");
-            if (textEl) textEl.textContent = "Python API Connected";
+            if (textEl) textEl.textContent = "API Connected";
         }
         return true;
 
     } catch (pyErr) {
-        console.warn("Python mock server also offline. Using local browser fallback.", pyErr);
+        console.warn("Backend server unreachable. Using local browser fallback.", pyErr);
     }
 
     // ─── ATTEMPT 3: Local Hardcoded Fallback ───
@@ -248,7 +250,7 @@ async function fetchDashboardData() {
     if (apiStatusIndicator) {
         apiStatusIndicator.className = "api-status offline";
         const textEl = apiStatusIndicator.querySelector(".api-status-text");
-        if (textEl) textEl.textContent = "API Offline (Mock)";
+        if (textEl) textEl.textContent = "API Offline (Fallback Data)";
     }
     return false;
 }
@@ -389,7 +391,7 @@ function setupSettingsModal() {
     if (navSettings) {
         navSettings.addEventListener("click", (e) => {
             e.preventDefault();
-            backendUrlInput.value = JAVA_BACKEND_URL;
+            backendUrlInput.value = BACKEND_URL;
             settingsModal.classList.add("open");
             settingsModalOverlay.classList.add("open");
         });
@@ -409,8 +411,8 @@ function setupSettingsModal() {
             if (newUrl && !newUrl.startsWith("http")) {
                 newUrl = "http://" + newUrl;
             }
-            JAVA_BACKEND_URL = newUrl || "http://localhost:8080";
-            localStorage.setItem('backendUrl', JAVA_BACKEND_URL);
+            BACKEND_URL = newUrl || "http://localhost:8000";
+            localStorage.setItem('backendUrl', BACKEND_URL);
             
             // Show loading state on button
             const originalText = btnSaveSettings.textContent;
@@ -418,9 +420,15 @@ function setupSettingsModal() {
             btnSaveSettings.disabled = true;
             
             await fetchDashboardData();
+            
+            // Refresh ALL UI components with the new backend data
             updateKPICards();
             renderTopCVEList(dashboardData.topCVEs);
             renderAssetsTable();
+            renderTopCVEsTable();
+            renderComplianceProgress(dashboardData.complianceRate);
+            updateCharts();
+            updateAlertCountUI(prioritizationCount);
             
             btnSaveSettings.textContent = originalText;
             btnSaveSettings.disabled = false;
@@ -468,7 +476,7 @@ async function updateAlertCount(newCount) {
     updateAlertCountUI(clampedCount);
     
     try {
-        const response = await fetch(`${JAVA_BACKEND_URL}/api/prioritization-count`, {
+        const response = await fetch(`${BACKEND_URL}/api/prioritization-count`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ count: clampedCount })
@@ -708,7 +716,7 @@ function closeDrawer() {
 // Action Trigger Playbook Alert
 window.executeMitigationPlaybook = async function(assetName, cve) {
     try {
-        const response = await fetch(`${JAVA_BACKEND_URL}/api/mitigate`, {
+        const response = await fetch(`${BACKEND_URL}/api/mitigate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ assetName, cve })
@@ -977,7 +985,7 @@ function setupEventListeners() {
         refreshAssetsBtn.classList.add("spinning");
         
         try {
-            const response = await fetch(`${JAVA_BACKEND_URL}/api/refresh`, { method: 'POST' });
+            const response = await fetch(`${BACKEND_URL}/api/refresh`, { method: 'POST' });
             if (!response.ok) throw new Error("HTTP error: " + response.status);
             
             dashboardData = await response.json();
@@ -1137,7 +1145,7 @@ async function generateReport() {
 
     let reportHTML = "";
     try {
-        const response = await fetch(`${JAVA_BACKEND_URL}/api/generate-report`, {
+        const response = await fetch(`${BACKEND_URL}/api/generate-report`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type, scope, incKpi, incCharts, incTable })
