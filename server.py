@@ -8,12 +8,12 @@ PORT = int(os.environ.get('PORT', 8000))
 
 # Mock Database / State in Memory
 dashboard_data = {
-    "criticalCVEs": 15,
+    "criticalCVEs": 6,
     "highNodes": 24,
-    "avgRiskScore": 6.4,
-    "openResponses": 8,
+    "avgRiskScore": 8.9,
+    "openResponses": 4,
     "complianceRate": 82,
-    "totalAssets": 250,
+    "totalAssets": 10,
     "topCVEs": [
         { "id": "CVE-2024-1102", "cvss": 9.8, "affected": 6, "riskScore": 9.8, "criticality": "critical" },
         { "id": "CVE-2024-9122", "cvss": 8.8, "affected": 15, "riskScore": 8.8, "criticality": "high" },
@@ -410,6 +410,45 @@ class ClawSentinelAPIHandler(SimpleHTTPRequestHandler):
             # Table: All risky assets sorted by risk score descending
             sorted_assets = sorted(dashboard_data["assets"], key=lambda a: a["score"], reverse=True)
             payload = { "assets": sorted_assets }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/dashboard-summary':
+            # Endpoint 1 requested by user: dashboard summary
+            payload = {
+                "totalAssets": dashboard_data["totalAssets"],
+                "criticalRisks": dashboard_data["criticalCVEs"],
+                "averageRiskScore": dashboard_data["avgRiskScore"],
+                "activeAIPlans": dashboard_data["openResponses"],
+                "activeSecurityAlert": {
+                    "assetId": "CPU-DCE-001",
+                    "assetName": "CPU-DCE-001",
+                    "assetType": "",
+                    "zone": "",
+                    "rack": "",
+                    "riskScore": 9.2,
+                    "severity": "CRITICAL",
+                    "topCve": "CVE-2025-4822",
+                    "cvss": 8.1,
+                    "healthStatus": "HEALTHY",
+                    "workloadState": "IDLE",
+                    "businessImpact": "Critical asset requires immediate remediation",
+                    "recommendedAction": "PATCH_IMMEDIATELY"
+                }
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+
+        elif self.path == '/api/trends':
+            # Endpoint 2 requested by user: trends
+            payload = {
+                "trendData": dashboard_data["trendData"],
+                "sparklineData": dashboard_data["sparklineData"]
+            }
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
