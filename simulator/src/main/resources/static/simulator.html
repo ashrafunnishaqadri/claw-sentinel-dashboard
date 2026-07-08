@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ClawSentinel - Live Simulator</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #0f111a; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .card { background: #1a1d2d; padding: 15px; border-radius: 8px; border: 1px solid #2d334b; }
+        .card h3 { margin: 0 0 10px 0; color: #a5b4fc; }
+        button { background: #3b82f6; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; margin-bottom: 5px; }
+        button:hover { background: #2563eb; }
+        .danger { background: #ef4444; } .danger:hover { background: #dc2626; }
+        .warning { background: #f59e0b; } .warning:hover { background: #d97706; }
+        .success { background: #10b981; } .success:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <h1>ClawSentinel Live Simulator</h1>
+    <p>Use these controls to inject live events into the backend. The frontend will update automatically via SSE.</p>
+
+    <div class="grid" id="controls"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        async function trigger(id, payload) {
+            await fetch(`${API_BASE}/assets/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            loadAssets(); // Refresh local view
+        }
+
+        async function loadAssets() {
+            const res = await fetch(`${API_BASE}/assets`);
+            const assets = await res.json();
+            
+            const container = document.getElementById('controls');
+            container.innerHTML = '';
+            
+            assets.forEach(a => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <h3>${a.id}</h3>
+                    <p style="font-size: 12px; margin-top: 0;">Risk: <b>${a.risk}</b> | Health: <b>${a.health}</b> | Util: <b>${a.workload?.util || 0}%</b></p>
+                    <button class="danger" onclick='trigger("${a.id}", {health: "DEGRADED", risk: 9.9})'>Simulate Attack (9.9)</button>
+                    <button class="warning" onclick='trigger("${a.id}", {health: "WARNING", risk: 7.5})'>Temp Warning (7.5)</button>
+                    <button class="success" onclick='trigger("${a.id}", {health: "HEALTHY", risk: 1.0})'>Resolve & Patch</button>
+                    <button onclick='trigger("${a.id}", {workload: {util: Math.floor(Math.random() * 100)}})'>Random CPU Spike</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        loadAssets();
+    </script>
+</body>
+</html>
